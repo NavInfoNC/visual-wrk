@@ -20,12 +20,15 @@ typedef struct {
     uint64_t limit;
     uint64_t min;
     uint64_t max;
+    uint64_t *requests;
+    uint64_t max_location;
     uint64_t data[];
 } stats;
 
 stats *stats_alloc(uint64_t);
 void stats_free(stats *);
 
+int stats_record_requests_per_time(stats *stats, uint64_t requests_num, uint64_t time);
 int stats_record(stats *, uint64_t);
 void stats_correct(stats *, int64_t);
 

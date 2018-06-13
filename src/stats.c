@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "stats.h"
@@ -10,12 +11,15 @@
 stats *stats_alloc(uint64_t max) {
     uint64_t limit = max + 1;
     stats *s = zcalloc(sizeof(stats) + sizeof(uint64_t) * limit);
+    s->requests = zcalloc(sizeof(uint64_t) * limit);
+    s->max_location = 0;
     s->limit = limit;
     s->min   = UINT64_MAX;
     return s;
 }
 
 void stats_free(stats *stats) {
+    zfree(stats->requests);
     zfree(stats);
 }
 
@@ -27,6 +31,15 @@ int stats_record(stats *stats, uint64_t n) {
     uint64_t max = stats->max;
     while (n < min) min = __sync_val_compare_and_swap(&stats->min, min, n);
     while (n > max) max = __sync_val_compare_and_swap(&stats->max, max, n);
+    /* printf("stats->min:%lu, stats->max:%lu\n", stats->min, stats->max); */
+    return 1;
+}
+
+int stats_record_requests_per_time(stats *stats, uint64_t requests_num, uint64_t time) {
+    if (time >= stats->limit) return 0;
+    __sync_fetch_and_add(&stats->requests[time], requests_num);
+    if (time > stats->max_location)
+        stats->max_location = time;
     return 1;
 }
 

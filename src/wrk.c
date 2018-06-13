@@ -4,9 +4,13 @@
 #include "script.h"
 #include "main.h"
 
+static uint64_t start_thread_time = 0;
+static bool thread_concurrency;
+
 static struct config {
     uint64_t connections;
     uint64_t duration;
+    uint64_t interval;
     uint64_t threads;
     uint64_t timeout;
     uint64_t pipeline;
@@ -15,6 +19,7 @@ static struct config {
     bool     latency;
     char    *host;
     char    *script;
+    char    *json_file;
     SSL_CTX *ctx;
 } cfg;
 
@@ -46,6 +51,7 @@ static void usage() {
            "  Options:                                            \n"
            "    -c, --connections <N>  Connections to keep open   \n"
            "    -d, --duration    <T>  Duration of test           \n"
+           "    -i, --interval    <T>  Request sampling interval  \n"
            "    -t, --threads     <N>  Number of threads to use   \n"
            "                                                      \n"
            "    -s, --script      <S>  Load Lua script file       \n"
@@ -59,6 +65,7 @@ static void usage() {
 }
 
 int main(int argc, char **argv) {
+    thread_concurrency = false;
     char *url, **headers = zmalloc(argc * sizeof(char *));
     struct http_parser_url parts = {};
 
@@ -92,7 +99,7 @@ int main(int argc, char **argv) {
     statistics.requests = stats_alloc(MAX_THREAD_RATE_S);
     thread *threads     = zcalloc(cfg.threads * sizeof(thread));
 
-    lua_State *L = script_create(cfg.script, url, headers);
+    lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
     if (!script_resolve(L, host, service)) {
         char *msg = strerror(errno);
         fprintf(stderr, "unable to connect to %s:%s %s\n", host, service, msg);
@@ -106,7 +113,7 @@ int main(int argc, char **argv) {
         t->loop        = aeCreateEventLoop(10 + cfg.connections * 3);
         t->connections = cfg.connections / cfg.threads;
 
-        t->L = script_create(cfg.script, url, headers);
+        t->L = script_create(cfg.script, cfg.json_file, url, headers);
         script_init(L, t, argc - optind, &argv[optind]);
 
         if (i == 0) {
@@ -138,10 +145,11 @@ int main(int argc, char **argv) {
     printf("Running %s test @ %s\n", time, url);
     printf("  %"PRIu64" threads and %"PRIu64" connections\n", cfg.threads, cfg.connections);
 
-    uint64_t start    = time_us();
+    start_thread_time = time_us();
     uint64_t complete = 0;
     uint64_t bytes    = 0;
     errors errors     = { 0 };
+    thread_concurrency = true;
 
     sleep(cfg.duration);
     stop = 1;
@@ -160,10 +168,27 @@ int main(int argc, char **argv) {
         errors.status  += t->errors.status;
     }
 
-    uint64_t runtime_us = time_us() - start;
+    uint64_t runtime_us = time_us() - start_thread_time;
     long double runtime_s   = runtime_us / 1000000.0;
     long double req_per_s   = complete   / runtime_s;
     long double bytes_per_s = bytes      / runtime_s;
+
+    char *runtime_msg = format_time_us(runtime_us);
+
+    printf("\n%"PRIu64" requests in %s, %sB read\n", complete, runtime_msg, format_binary(bytes));
+    if (errors.connect || errors.read || errors.write || errors.timeout) {
+        printf("Socket errors: connect %d, read %d, write %d, timeout %d\n",
+               errors.connect, errors.read, errors.write, errors.timeout);
+    }
+
+    printf("\nComplete responses: %lu\n", complete);
+    printf("Non-2xx or 3xx responses: %d\n", errors.status);
+
+    printf("Requests/sec: %9.2Lf\n", req_per_s);
+    printf("Transfer/sec: %10sB\n", format_binary(bytes_per_s));
+
+    printf("\nFrequency of requests Per %lus\n", cfg.interval);
+    print_stats_requests(statistics.requests);
 
     if (complete / cfg.connections > 0) {
         int64_t interval = runtime_us / (complete / cfg.connections);
@@ -174,21 +199,6 @@ int main(int argc, char **argv) {
     print_stats("Latency", statistics.latency, format_time_us);
     print_stats("Req/Sec", statistics.requests, format_metric);
     if (cfg.latency) print_stats_latency(statistics.latency);
-
-    char *runtime_msg = format_time_us(runtime_us);
-
-    printf("  %"PRIu64" requests in %s, %sB read\n", complete, runtime_msg, format_binary(bytes));
-    if (errors.connect || errors.read || errors.write || errors.timeout) {
-        printf("  Socket errors: connect %d, read %d, write %d, timeout %d\n",
-               errors.connect, errors.read, errors.write, errors.timeout);
-    }
-
-    if (errors.status) {
-        printf("  Non-2xx or 3xx responses: %d\n", errors.status);
-    }
-
-    printf("Requests/sec: %9.2Lf\n", req_per_s);
-    printf("Transfer/sec: %10sB\n", format_binary(bytes_per_s));
 
     if (script_has_done(L)) {
         script_summary(L, runtime_us, complete, bytes);
@@ -222,10 +232,14 @@ void *thread_main(void *arg) {
     }
 
     aeEventLoop *loop = thread->loop;
-    aeCreateTimeEvent(loop, RECORD_INTERVAL_MS, record_rate, thread, NULL);
 
-    thread->start = time_us();
-    aeMain(loop);
+    while(!loop->stop) {
+        if (thread_concurrency) {
+            aeCreateTimeEvent(loop, RECORD_INTERVAL_MS, record_rate, thread, NULL);
+            thread->start = time_us();
+            aeMain(loop);
+        }
+    }
 
     aeDeleteEventLoop(loop);
     zfree(thread->cs);
@@ -278,6 +292,9 @@ static int record_rate(aeEventLoop *loop, long long id, void *data) {
         uint64_t requests = (thread->requests / (double) elapsed_ms) * 1000;
 
         stats_record(statistics.requests, requests);
+
+        uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
+        stats_record_requests_per_time(statistics.requests, thread->requests, time_interval);
 
         thread->requests = 0;
         thread->start    = time_us();
@@ -485,11 +502,12 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
 
     memset(cfg, 0, sizeof(struct config));
     cfg->threads     = 2;
+    cfg->interval    = 1;
     cfg->connections = 10;
     cfg->duration    = 10;
     cfg->timeout     = SOCKET_TIMEOUT_MS;
 
-    while ((c = getopt_long(argc, argv, "t:c:d:s:H:T:Lrv?", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "t:c:i:d:j:s:H:T:Lrv?", longopts, NULL)) != -1) {
         switch (c) {
             case 't':
                 if (scan_metric(optarg, &cfg->threads)) return -1;
@@ -497,11 +515,17 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
             case 'c':
                 if (scan_metric(optarg, &cfg->connections)) return -1;
                 break;
+            case 'i':
+                if (scan_metric(optarg, &cfg->interval)) return -1;
+                break;
             case 'd':
                 if (scan_time(optarg, &cfg->duration)) return -1;
                 break;
             case 's':
                 cfg->script = optarg;
+                break;
+            case 'j':
+                cfg->json_file = optarg;
                 break;
             case 'H':
                 *header++ = optarg;
@@ -544,7 +568,7 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
 }
 
 static void print_stats_header() {
-    printf("  Thread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
+    printf("\nThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
 }
 
 static void print_units(long double n, char *(*fmt)(long double), int width) {
@@ -560,12 +584,35 @@ static void print_units(long double n, char *(*fmt)(long double), int width) {
     free(msg);
 }
 
+static void print_stats_requests(stats *stats) {
+    uint64_t requests = 0;
+    uint64_t requests_num = 0;
+    uint64_t  i = 0;
+
+    for (i = 0; i <= stats->max_location; i++) {
+        requests += stats->requests[i];
+        requests_num++;
+
+        if (requests_num == cfg.interval) {
+            uint64_t indexInterval = i/cfg.interval;
+            printf("  %3lus %3lus\tReq/Sec:%6.2lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
+            requests = 0;
+            requests_num = 0;
+        }
+    }
+
+    if (requests_num != 0) {
+        uint64_t indexInterval = (i - 1)/cfg.interval;
+        printf("  %3lus %3lus\tReq/Sec:%6.2lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
+    }
+}
+
 static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
     uint64_t max = stats->max;
     long double mean  = stats_mean(stats);
     long double stdev = stats_stdev(stats, mean);
 
-    printf("    %-10s", name);
+    printf("  %-10s", name);
     print_units(mean,  fmt, 8);
     print_units(stdev, fmt, 10);
     print_units(max,   fmt, 9);
@@ -573,12 +620,12 @@ static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
 }
 
 static void print_stats_latency(stats *stats) {
-    long double percentiles[] = { 50.0, 75.0, 90.0, 99.0 };
-    printf("  Latency Distribution\n");
+    long double percentiles[] = { 50.0, 66.0, 75.0, 80.0, 90.0, 95.0, 98.0, 99.0, 99.99 };
+    printf("\nLatency Distribution\n");
     for (size_t i = 0; i < sizeof(percentiles) / sizeof(long double); i++) {
         long double p = percentiles[i];
         uint64_t n = stats_percentile(stats, p);
-        printf("%7.0Lf%%", p);
+        printf("%5.0Lf%%", p);
         print_units(n, format_time_us, 10);
         printf("\n");
     }
