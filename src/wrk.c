@@ -238,7 +238,8 @@ void *thread_main(void *arg) {
             aeCreateTimeEvent(loop, RECORD_INTERVAL_MS, record_rate, thread, NULL);
             thread->start = time_us();
             aeMain(loop);
-        }
+        }else
+            usleep(100);
     }
 
     aeDeleteEventLoop(loop);
@@ -595,7 +596,7 @@ static void print_stats_requests(stats *stats) {
 
         if (requests_num == cfg.interval) {
             uint64_t indexInterval = i/cfg.interval;
-            printf("  %3lus %3lus\tReq/Sec:%6.2lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
+            printf("  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
             requests = 0;
             requests_num = 0;
         }
@@ -603,7 +604,7 @@ static void print_stats_requests(stats *stats) {
 
     if (requests_num != 0) {
         uint64_t indexInterval = (i - 1)/cfg.interval;
-        printf("  %3lus %3lus\tReq/Sec:%6.2lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
+        printf("  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
     }
 }
 
@@ -620,7 +621,7 @@ static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
 }
 
 static void print_stats_latency(stats *stats) {
-    long double percentiles[] = { 50.0, 66.0, 75.0, 80.0, 90.0, 95.0, 98.0, 99.0, 99.99 };
+    long double percentiles[] = { 50.0, 66.0, 75.0, 80.0, 90.0, 95.0, 98.0, 99.0, 100.0 };
     printf("\nLatency Distribution\n");
     for (size_t i = 0; i < sizeof(percentiles) / sizeof(long double); i++) {
         long double p = percentiles[i];
