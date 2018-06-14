@@ -162,12 +162,8 @@ int main(int argc, char **argv) {
 
     fprintf(g_log, "\nTEST PARAMETER:\n");
     fprintf(g_log, "---------------------------\n");
-    if (cfg.json_file != NULL)
-        fprintf(g_log, "\n::\n\n\tLoad Profile:%s\n", cfg.json_file);
-    char *time = format_time_s(cfg.duration);
-    fprintf(g_log, "\n::\n\n\tRunning %s test @ %s\n", time, url);
-    fprintf(g_log, "  \t%"PRIu64" threads and %"PRIu64" connections\n", cfg.threads, cfg.connections);
-
+    print_test_parameter(url);
+    
     start_thread_time = time_us();
     uint64_t complete = 0;
     uint64_t bytes    = 0;
@@ -213,7 +209,6 @@ int main(int argc, char **argv) {
     fprintf(g_log, "\tRequests/sec: %9.2Lf\n", req_per_s);
     fprintf(g_log, "\tTransfer/sec: %10sB\n", format_binary(bytes_per_s));
 
-    fprintf(g_log, "\n::\n\n\tFrequency of requests Per %lus\n", cfg.interval);
     print_stats_requests(statistics.requests);
 
     if (complete / cfg.connections > 0) {
@@ -230,7 +225,7 @@ int main(int argc, char **argv) {
     resultForm.req_per_s = req_per_s;
     resultForm.time = runtime_msg;
     resultForm.connections = cfg.connections;
-    print_form();
+    print_result_form();
 
     if (script_has_done(L)) {
         script_summary(L, runtime_us, complete, bytes);
@@ -625,6 +620,7 @@ static void print_units(long double n, char *(*fmt)(long double), int width) {
 }
 
 static void print_stats_requests(stats *stats) {
+    fprintf(g_log, "\n::\n\n\tFrequency of requests Per %lus\n", cfg.interval);
     uint64_t requests = 0;
     uint64_t requests_num = 0;
     uint64_t  i = 0;
@@ -678,7 +674,7 @@ static void print_stats_latency(stats *stats) {
     }
 }
 
-static void print_form() {
+static void print_result_form() {
     struct resultForm *o = &resultForm;
     fprintf(g_log, "+----------+----------+------------+-------+----------------------------------+\n");
     fprintf(g_log, "| 并发数   | 压力时间 | 吞吐率     |  RPS  |           响应时间 ( s )         |\n");
@@ -689,3 +685,11 @@ static void print_form() {
     fprintf(g_log, "+----------+----------+------------+-------+-------+-------+-------+----------+\n");
 }
 
+static void print_test_parameter(const char* url) {
+    if (cfg.json_file != NULL)
+        fprintf(g_log, "\n::\n\n\tLoad Profile:%s\n", cfg.json_file);
+
+    char *time = format_time_s(cfg.duration);
+    fprintf(g_log, "\n::\n\n\tRunning %s test @ %s\n", time, url);
+    fprintf(g_log, "  \t%"PRIu64" threads and %"PRIu64" connections\n", cfg.threads, cfg.connections);
+}
