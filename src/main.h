@@ -51,5 +51,5 @@ static void print_stats_header();
 static void print_stats(char *, stats *, char *(*)(long double));
 static void print_stats_latency(stats *);
 static void print_stats_requests(stats *stats);
-
+static void print_form();
 #endif /* MAIN_H */

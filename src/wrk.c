@@ -20,6 +20,7 @@ static struct config {
     char    *host;
     char    *script;
     char    *json_file;
+    char    *log_file;
     SSL_CTX *ctx;
 } cfg;
 
@@ -27,6 +28,17 @@ static struct {
     stats *latency;
     stats *requests;
 } statistics;
+
+static struct resultForm {
+    uint64_t connections;
+    long double req_per_s;
+    long double max;
+    long double mean;
+    long double stdev;
+    long double PorNstdev;
+    char *time;
+    char *bytes_per_s;
+ } resultForm = {0, 0, 0, 0, 0, 0, 0, NULL, NULL};
 
 static struct sock sock = {
     .connect  = sock_connect,
@@ -46,6 +58,8 @@ static void handler(int sig) {
     stop = 1;
 }
 
+static FILE *g_log;
+
 static void usage() {
     printf("Usage: wrk <options> <url>                            \n"
            "  Options:                                            \n"
@@ -58,6 +72,7 @@ static void usage() {
            "    -H, --header      <H>  Add header to request      \n"
            "        --latency          Print latency statistics   \n"
            "        --timeout     <T>  Socket/request timeout     \n"
+           "    -l  --log              Output report in rst format\n"
            "    -v, --version          Print version details      \n"
            "                                                      \n"
            "  Numeric arguments may include a SI unit (1k, 1M, 1G)\n"
@@ -73,6 +88,10 @@ int main(int argc, char **argv) {
         usage();
         exit(1);
     }
+
+    g_log = fopen(cfg.log_file, "a+");
+    if (g_log == NULL)
+        g_log = stderr;
 
     char *schema  = copy_url_part(url, &parts, UF_SCHEMA);
     char *host    = copy_url_part(url, &parts, UF_HOST);
@@ -141,9 +160,13 @@ int main(int argc, char **argv) {
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
+    fprintf(g_log, "\nTEST PARAMETER:\n");
+    fprintf(g_log, "---------------------------\n");
+    if (cfg.json_file != NULL)
+        fprintf(g_log, "\n::\n\n\tLoad Profile:%s\n", cfg.json_file);
     char *time = format_time_s(cfg.duration);
-    printf("Running %s test @ %s\n", time, url);
-    printf("  %"PRIu64" threads and %"PRIu64" connections\n", cfg.threads, cfg.connections);
+    fprintf(g_log, "\n::\n\n\tRunning %s test @ %s\n", time, url);
+    fprintf(g_log, "  \t%"PRIu64" threads and %"PRIu64" connections\n", cfg.threads, cfg.connections);
 
     start_thread_time = time_us();
     uint64_t complete = 0;
@@ -175,19 +198,22 @@ int main(int argc, char **argv) {
 
     char *runtime_msg = format_time_us(runtime_us);
 
-    printf("\n%"PRIu64" requests in %s, %sB read\n", complete, runtime_msg, format_binary(bytes));
+    fprintf(g_log, "\nTEST RESULT:\n");
+    fprintf(g_log, "--------------\n");
+
+    fprintf(g_log, "\n::\n\n\t%"PRIu64" requests in %s, %sB read\n", complete, runtime_msg, format_binary(bytes));
     if (errors.connect || errors.read || errors.write || errors.timeout) {
-        printf("Socket errors: connect %d, read %d, write %d, timeout %d\n",
+        fprintf(g_log, "\tSocket errors: connect %d, read %d, write %d, timeout %d\n",
                errors.connect, errors.read, errors.write, errors.timeout);
     }
 
-    printf("\nComplete responses: %lu\n", complete);
-    printf("Non-2xx or 3xx responses: %d\n", errors.status);
+    fprintf(g_log, "\n::\n\n\tComplete responses: %lu\n", complete);
+    fprintf(g_log, "\tNon-2xx or 3xx responses: %d\n", errors.status);
 
-    printf("Requests/sec: %9.2Lf\n", req_per_s);
-    printf("Transfer/sec: %10sB\n", format_binary(bytes_per_s));
+    fprintf(g_log, "\tRequests/sec: %9.2Lf\n", req_per_s);
+    fprintf(g_log, "\tTransfer/sec: %10sB\n", format_binary(bytes_per_s));
 
-    printf("\nFrequency of requests Per %lus\n", cfg.interval);
+    fprintf(g_log, "\n::\n\n\tFrequency of requests Per %lus\n", cfg.interval);
     print_stats_requests(statistics.requests);
 
     if (complete / cfg.connections > 0) {
@@ -199,12 +225,20 @@ int main(int argc, char **argv) {
     print_stats("Latency", statistics.latency, format_time_us);
     print_stats("Req/Sec", statistics.requests, format_metric);
     if (cfg.latency) print_stats_latency(statistics.latency);
+    
+    resultForm.bytes_per_s = format_binary(bytes_per_s);
+    resultForm.req_per_s = req_per_s;
+    resultForm.time = runtime_msg;
+    resultForm.connections = cfg.connections;
+    print_form();
 
     if (script_has_done(L)) {
         script_summary(L, runtime_us, complete, bytes);
         script_errors(L, &errors);
         script_done(L, statistics.latency, statistics.requests);
     }
+
+    fclose(g_log);
 
     return 0;
 }
@@ -487,6 +521,8 @@ static char *copy_url_part(char *url, struct http_parser_url *parts, enum http_p
 static struct option longopts[] = {
     { "connections", required_argument, NULL, 'c' },
     { "duration",    required_argument, NULL, 'd' },
+    { "json",        required_argument, NULL, 'j' },
+    { "log",         required_argument, NULL, 'l' },
     { "threads",     required_argument, NULL, 't' },
     { "script",      required_argument, NULL, 's' },
     { "header",      required_argument, NULL, 'H' },
@@ -508,7 +544,7 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
     cfg->duration    = 10;
     cfg->timeout     = SOCKET_TIMEOUT_MS;
 
-    while ((c = getopt_long(argc, argv, "t:c:i:d:j:s:H:T:Lrv?", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "t:c:i:d:j:l:s:H:T:Lrv?", longopts, NULL)) != -1) {
         switch (c) {
             case 't':
                 if (scan_metric(optarg, &cfg->threads)) return -1;
@@ -530,6 +566,9 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
                 break;
             case 'H':
                 *header++ = optarg;
+                break;
+            case 'l':
+                cfg->log_file = optarg;
                 break;
             case 'L':
                 cfg->latency = true;
@@ -569,7 +608,7 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
 }
 
 static void print_stats_header() {
-    printf("\nThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
+    fprintf(g_log, "\n::\n\n\tThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
 }
 
 static void print_units(long double n, char *(*fmt)(long double), int width) {
@@ -580,7 +619,7 @@ static void print_units(long double n, char *(*fmt)(long double), int width) {
     if (isalpha(msg[len-2])) pad--;
     width -= pad;
 
-    printf("%*.*s%.*s", width, width, msg, pad, "  ");
+    fprintf(g_log, "%*.*s%.*s", width, width, msg, pad, "  ");
 
     free(msg);
 }
@@ -596,7 +635,7 @@ static void print_stats_requests(stats *stats) {
 
         if (requests_num == cfg.interval) {
             uint64_t indexInterval = i/cfg.interval;
-            printf("  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
+            fprintf(g_log, "\t  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
             requests = 0;
             requests_num = 0;
         }
@@ -604,7 +643,7 @@ static void print_stats_requests(stats *stats) {
 
     if (requests_num != 0) {
         uint64_t indexInterval = (i - 1)/cfg.interval;
-        printf("  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
+        fprintf(g_log, "\t  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
     }
 }
 
@@ -612,22 +651,41 @@ static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
     uint64_t max = stats->max;
     long double mean  = stats_mean(stats);
     long double stdev = stats_stdev(stats, mean);
+    long double PorNstdev = stats_within_stdev(stats, mean, stdev, 1);
 
-    printf("  %-10s", name);
+    fprintf(g_log, "\t  %-10s", name);
     print_units(mean,  fmt, 8);
     print_units(stdev, fmt, 10);
     print_units(max,   fmt, 9);
-    printf("%8.2Lf%%\n", stats_within_stdev(stats, mean, stdev, 1));
+    fprintf(g_log, "%8.2Lf%%\n", PorNstdev);
+    if (strcmp("Latency", name) == 0) {
+        resultForm.max = (long double)max/1000/1000;
+        resultForm.mean  = mean/1000/1000;
+        resultForm.stdev = stdev/1000/1000;
+        resultForm.PorNstdev = PorNstdev;
+    }
 }
 
 static void print_stats_latency(stats *stats) {
     long double percentiles[] = { 50.0, 66.0, 75.0, 80.0, 90.0, 95.0, 98.0, 99.0, 100.0 };
-    printf("\nLatency Distribution\n");
+    fprintf(g_log, "\n::\n\n\tLatency Distribution\n");
     for (size_t i = 0; i < sizeof(percentiles) / sizeof(long double); i++) {
         long double p = percentiles[i];
         uint64_t n = stats_percentile(stats, p);
-        printf("%5.0Lf%%", p);
+        fprintf(g_log, "\t%5.0Lf%%", p);
         print_units(n, format_time_us, 10);
-        printf("\n");
+        fprintf(g_log, "\n");
     }
 }
+
+static void print_form() {
+    struct resultForm *o = &resultForm;
+    fprintf(g_log, "+----------+----------+------------+-------+----------------------------------+\n");
+    fprintf(g_log, "| 并发数   | 压力时间 | 吞吐率     |  RPS  |           响应时间 ( s )         |\n");
+    fprintf(g_log, "|          |          |            |       +-------+-------+-------+----------+\n");
+    fprintf(g_log, "|          |          |            |       |   avg |  max  | stdev | +/-stdev |\n");
+    fprintf(g_log, "+==========+==========+============+=======+=======+=======+=======+==========+\n");
+    fprintf(g_log, "| %7.00lu  |  %7.007s | %7.007sB   |%7.01Lf|%7.02Lf|%7.02Lf|%7.02Lf| %7.3Lf%% |\n", o->connections, o->time, o->bytes_per_s, o->req_per_s, o->mean, o->max, o->stdev, o->PorNstdev);
+    fprintf(g_log, "+----------+----------+------------+-------+-------+-------+-------+----------+\n");
+}
+
