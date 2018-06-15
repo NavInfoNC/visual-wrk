@@ -131,6 +131,7 @@ int main(int argc, char **argv) {
         thread *t      = &threads[i];
         t->loop        = aeCreateEventLoop(10 + cfg.connections * 3);
         t->connections = cfg.connections / cfg.threads;
+        memset(t->errors.code, 0, sizeof(t->errors.code));
 
         t->L = script_create(cfg.script, cfg.json_file, url, headers);
         script_init(L, t, argc - optind, &argv[optind]);
@@ -185,6 +186,12 @@ int main(int argc, char **argv) {
         errors.write   += t->errors.write;
         errors.timeout += t->errors.timeout;
         errors.status  += t->errors.status;
+
+        int count = sizeof(errors.code)/sizeof(errors.code[0]);
+        for (int j = 0; j < count; j++) {
+            if (t->errors.code != 0)
+                errors.code[j] += t->errors.code[j];
+        }
     }
 
     uint64_t runtime_us = time_us() - start_thread_time;
@@ -209,6 +216,7 @@ int main(int argc, char **argv) {
     fprintf(g_log, "\tRequests/sec: %9.2Lf\n", req_per_s);
     fprintf(g_log, "\tTransfer/sec: %10sB\n", format_binary(bytes_per_s));
 
+    print_stats_error_code(&errors);
     print_stats_requests(statistics.requests);
 
     if (complete / cfg.connections > 0) {
@@ -378,6 +386,7 @@ static int response_complete(http_parser *parser) {
     thread->requests++;
 
     if (status > 399) {
+        thread->errors.code[status] += 1;
         thread->errors.status++;
     }
 
@@ -617,6 +626,15 @@ static void print_units(long double n, char *(*fmt)(long double), int width) {
     fprintf(g_log, "%*.*s%.*s", width, width, msg, pad, "  ");
 
     free(msg);
+}
+
+static void print_stats_error_code(errors *errors) {
+    fprintf(g_log, "\n::\n\n\terror code :\n");
+    int count = sizeof(errors->code)/sizeof(errors->code[0]);
+    for (int i = 0; i < count; i++) {
+        if (errors->code[i] != 0)
+            fprintf(g_log, "\t  %u\n", i);
+    }
 }
 
 static void print_stats_requests(stats *stats) {

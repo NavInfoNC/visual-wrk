@@ -51,6 +51,7 @@ static void print_stats_header();
 static void print_stats(char *, stats *, char *(*)(long double));
 static void print_stats_latency(stats *);
 static void print_stats_requests(stats *stats);
+static void print_stats_error_code(errors *errors);
 static void print_result_form();
 static void print_test_parameter(const char* url);
 
