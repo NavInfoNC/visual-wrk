@@ -21,8 +21,7 @@ function shuffle(paths)
   return paths
 end
 
--- Load URL paths from the file
-function load_request_objects_from_file(file)
+function decode_json_from_file(file)
   local data = {}
   local content
 
@@ -40,13 +39,22 @@ function load_request_objects_from_file(file)
 
   -- Translate Lua value to/from JSON
   data = cjson.decode(content)
+  return data
+end
 
+json_data = decode_json_from_file(c_default_name)
 
-  return shuffle(data)
+-- Load URL paths from the file
+function load_request_objects_from_data()
+  if next(json_data) == nil then
+    return lines
+  end
+
+  return shuffle(json_data["request"])
 end
 
 -- Load URL requests from file
-requests = load_request_objects_from_file(c_default_name)
+requests = load_request_objects_from_data(c_default_name)
 
 -- Check if at least one path was found in the file
 if #requests <= 0 then
@@ -54,7 +62,11 @@ if #requests <= 0 then
   os.exit()
 end
 
-print("multiplerequests: Found " .. #requests .. " requests")
+-- print("multiplerequests: Found " .. #requests .. " requests")
+
+url = function()
+  return json_data["url"]
+end
 
 -- Initialize the requests array iterator
 counter = 1

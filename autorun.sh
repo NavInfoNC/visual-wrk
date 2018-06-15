@@ -20,6 +20,6 @@ do
     echo "" >> ${reportFile}
     echo "${idx}. TEST CASE" >> ${reportFile}
     echo "=================" >> ${reportFile}
-    ./wrk  -i${sampleInterval} -t${threadNum} -c${concurrency} -d${duration} -l ${reportFile} -s scripts/multi-request-json.lua -j ${dataPath}/${route} ${url} --latency --timeout=100
+    ./wrk  -i${sampleInterval} -t${threadNum} -c${concurrency} -d${duration} -l ${reportFile} -s scripts/multi-request-json.lua -j ${dataPath}/${route} --latency --timeout=100
     let idx++
 done  

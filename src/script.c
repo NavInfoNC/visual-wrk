@@ -53,6 +53,17 @@ lua_State *script_create(char *file, char *json_file, char *url, char **headers)
 		lua_pushstring(L, json_file);
 		lua_setglobal(L, "c_default_name");
 	}
+    
+    if (file && luaL_dofile(L, file)) {
+        const char *cause = lua_tostring(L, -1);
+        fprintf(stderr, "%s: %s\n", file, cause);
+    }
+
+    if (strlen(url) == 0) {
+        size_t len;
+        script_url(L, url, &len);
+    }
+
     (void) luaL_dostring(L, "wrk = require \"wrk\"");
 
     luaL_newmetatable(L, "wrk.addr");
@@ -94,11 +105,6 @@ lua_State *script_create(char *file, char *json_file, char *url, char **headers)
         }
     }
     lua_pop(L, 5);
-
-    if (file && luaL_dofile(L, file)) {
-        const char *cause = lua_tostring(L, -1);
-        fprintf(stderr, "%s: %s\n", file, cause);
-    }
 
     return L;
 }
@@ -152,6 +158,20 @@ uint64_t script_delay(lua_State *L) {
     uint64_t delay = lua_tonumber(L, -1);
     lua_pop(L, 1);
     return delay;
+}
+
+void script_url(lua_State *L, char *buf, size_t *len) {
+    int pop = 1;
+    lua_getglobal(L, "url");
+    if (!lua_isfunction(L, -1)) {
+        lua_getglobal(L, "wrk");
+        lua_getfield(L, -1, "url");
+        pop += 2;
+    }
+    lua_call(L, 0, 1);
+    const char *str = lua_tolstring(L, -1, len);
+    memcpy(buf, str, *len);
+    lua_pop(L, pop);
 }
 
 void script_request(lua_State *L, char **buf, size_t *len) {

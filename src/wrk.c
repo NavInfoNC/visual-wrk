@@ -4,6 +4,8 @@
 #include "script.h"
 #include "main.h"
 
+#define MAX_URL_LENGTH 2048
+
 static uint64_t start_thread_time = 0;
 static bool thread_concurrency;
 
@@ -81,11 +83,18 @@ static void usage() {
 
 int main(int argc, char **argv) {
     thread_concurrency = false;
-    char *url, **headers = zmalloc(argc * sizeof(char *));
+    char url[MAX_URL_LENGTH] = {0};
+    char **headers = zmalloc(argc * sizeof(char *));
     struct http_parser_url parts = {};
 
-    if (parse_args(&cfg, &url, &parts, headers, argc, argv)) {
+    if (parse_args(&cfg, url, headers, argc, argv)) {
         usage();
+        exit(1);
+    }
+
+    lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
+    if (strlen(url) == 0 || !script_parse_url(url, &parts)) {
+        fprintf(stderr, "invalid URL: %s\n", url);
         exit(1);
     }
 
@@ -97,6 +106,14 @@ int main(int argc, char **argv) {
     char *host    = copy_url_part(url, &parts, UF_HOST);
     char *port    = copy_url_part(url, &parts, UF_PORT);
     char *service = port ? port : schema;
+
+    if (!script_resolve(L, host, service)) {
+        char *msg = strerror(errno);
+        fprintf(stderr, "unable to connect to %s:%s %s\n", host, service, msg);
+        exit(1);
+    }
+
+    cfg.host = host;
 
     if (!strncmp("https", schema, 5)) {
         if ((cfg.ctx = ssl_init()) == NULL) {
@@ -117,15 +134,6 @@ int main(int argc, char **argv) {
     statistics.latency  = stats_alloc(cfg.timeout * 1000);
     statistics.requests = stats_alloc(MAX_THREAD_RATE_S);
     thread *threads     = zcalloc(cfg.threads * sizeof(thread));
-
-    lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
-    if (!script_resolve(L, host, service)) {
-        char *msg = strerror(errno);
-        fprintf(stderr, "unable to connect to %s:%s %s\n", host, service, msg);
-        exit(1);
-    }
-
-    cfg.host = host;
 
     for (uint64_t i = 0; i < cfg.threads; i++) {
         thread *t      = &threads[i];
@@ -537,7 +545,7 @@ static struct option longopts[] = {
     { NULL,          0,                 NULL,  0  }
 };
 
-static int parse_args(struct config *cfg, char **url, struct http_parser_url *parts, char **headers, int argc, char **argv) {
+static int parse_args(struct config *cfg, char *url, char **headers, int argc, char **argv) {
     char **header = headers;
     int c;
 
@@ -593,19 +601,22 @@ static int parse_args(struct config *cfg, char **url, struct http_parser_url *pa
         }
     }
 
-    if (optind == argc || !cfg->threads || !cfg->duration) return -1;
-
-    if (!script_parse_url(argv[optind], parts)) {
-        fprintf(stderr, "invalid URL: %s\n", argv[optind]);
-        return -1;
-    }
+    if (!cfg->threads || !cfg->duration) return -1;
 
     if (!cfg->connections || cfg->connections < cfg->threads) {
         fprintf(stderr, "number of connections must be >= threads\n");
         return -1;
     }
 
-    *url    = argv[optind];
+    if (optind != argc) {
+        if (MAX_URL_LENGTH < strlen(argv[optind])) {
+            fprintf(stderr, "Url length exceeds %d!\n", MAX_URL_LENGTH);
+            return -1;
+        }
+
+        memcpy(url, argv[optind], strlen(argv[optind]));
+    }
+
     *header = NULL;
 
     return 0;

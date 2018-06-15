@@ -39,7 +39,7 @@ static void realtime_output_request_num(stats *stats, uint64_t sec) {
     static volatile long start = 0;
     static uint64_t last_sec = 0;
     if (start == 0 && __sync_lock_test_and_set(&start, 1) == 0) {
-        fprintf(stdout, "\nREAL-TIME REQUEST VOLUME:\n");
+        fprintf(stdout, "\nREAL-TIME REQUEST QUANTITY:\n");
         fprintf(stdout, "-------------------------\n\n::\n\n");
     }
 
