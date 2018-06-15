@@ -35,11 +35,26 @@ int stats_record(stats *stats, uint64_t n) {
     return 1;
 }
 
-int stats_record_requests_per_time(stats *stats, uint64_t requests_num, uint64_t time) {
-    if (time >= stats->limit) return 0;
-    __sync_fetch_and_add(&stats->requests[time], requests_num);
-    if (time > stats->max_location)
-        stats->max_location = time;
+static void realtime_output_request_num(stats *stats, uint64_t sec) {
+    static volatile long start = 0;
+    static uint64_t last_sec = 0;
+    if (start == 0 && __sync_lock_test_and_set(&start, 1) == 0) {
+        fprintf(stdout, "\nREAL-TIME REQUEST VOLUME:\n");
+        fprintf(stdout, "-------------------------\n\n::\n\n");
+    }
+
+    if (sec > last_sec) {
+        fprintf(stdout, "  %6lus requests:%lu\n", sec - 1, stats->requests[sec - 1]);
+        last_sec = sec;
+    }
+}
+
+int stats_record_requests_per_sec(stats *stats, uint64_t requests_num, uint64_t sec) {
+    if (sec >= stats->limit) return 0;
+    __sync_fetch_and_add(&stats->requests[sec], requests_num);
+    realtime_output_request_num(stats, sec);
+    if (sec > stats->max_location)
+        stats->max_location = sec;
     return 1;
 }
 

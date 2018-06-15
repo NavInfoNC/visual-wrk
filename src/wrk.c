@@ -332,7 +332,7 @@ static int record_rate(aeEventLoop *loop, long long id, void *data) {
         stats_record(statistics.requests, requests);
 
         uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
-        stats_record_requests_per_time(statistics.requests, thread->requests, time_interval);
+        stats_record_requests_per_sec(statistics.requests, thread->requests, time_interval);
 
         thread->requests = 0;
         thread->start    = time_us();

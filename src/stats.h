@@ -29,7 +29,7 @@ typedef struct {
 stats *stats_alloc(uint64_t);
 void stats_free(stats *);
 
-int stats_record_requests_per_time(stats *stats, uint64_t requests_num, uint64_t time);
+int stats_record_requests_per_sec(stats *stats, uint64_t requests_num, uint64_t time);
 int stats_record(stats *, uint64_t);
 void stats_correct(stats *, int64_t);
 
