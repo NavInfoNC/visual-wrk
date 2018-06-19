@@ -653,6 +653,10 @@ static void print_stats_requests(stats *stats) {
     uint64_t requests = 0;
     uint64_t requests_num = 0;
     uint64_t  i = 0;
+    if (stats->max_location == 0) {
+        fprintf(g_log, "\t  %3lus %3lus\tReq/Sec:%6.2Lf\n", (uint64_t)0, cfg.interval, (long double)0);
+        return ;
+    }
 
     for (i = 0; i <= stats->max_location; i++) {
         requests += stats->requests[i];
