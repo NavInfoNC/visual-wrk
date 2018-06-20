@@ -32,15 +32,21 @@ static struct {
 } statistics;
 
 static struct resultForm {
-    uint64_t connections;
-    long double req_per_s;
-    long double max;
-    long double mean;
-    long double stdev;
-    long double PorNstdev;
+    uint64_t complete;
+    char *connections;
     char *time;
+    char *bytes;
+    char *latency_max;
+    char *latency_mean;
+    char *latency_stdev;
+    char *latency_PorNstdev;
+    char *rps_max;
+    char *rps_mean;
+    char *rps_stdev;
+    char *rps_PorNstdev;
+    char *req_per_s;
     char *bytes_per_s;
- } resultForm = {0, 0, 0, 0, 0, 0, 0, NULL, NULL};
+ } result = {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static struct sock sock = {
     .connect  = sock_connect,
@@ -61,6 +67,7 @@ static void handler(int sig) {
 }
 
 static FILE *g_log;
+static char *g_html_template;
 
 static void usage() {
     printf("Usage: wrk <options> <url>                            \n"
@@ -79,6 +86,24 @@ static void usage() {
            "                                                      \n"
            "  Numeric arguments may include a SI unit (1k, 1M, 1G)\n"
            "  Time arguments may include a time unit (2s, 2m, 2h)\n");
+}
+
+bool html_get_template() {
+    char *template_name = "template/test1.html";
+    struct stat s;
+    if (stat(template_name, &s) == -1 || s.st_size == 0)
+        return false;
+
+    FILE *fp = fopen(template_name, "r");
+    if (fp == NULL)
+        return false;
+
+    g_html_template = (char *)malloc(sizeof(char) * s.st_size + 1);
+    fread(g_html_template, s.st_size, sizeof(char), fp);
+
+    fclose(fp);
+
+    return true;
 }
 
 int main(int argc, char **argv) {
@@ -169,8 +194,11 @@ int main(int argc, char **argv) {
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
-    fprintf(g_log, "\nTEST PARAMETER:\n");
-    fprintf(g_log, "---------------------------\n");
+    if (!html_get_template()) {
+        fprintf(stderr, "Cannot open HTML template");
+        exit(1);
+    }
+
     print_test_parameter(url);
     
     start_thread_time = time_us();
@@ -207,22 +235,15 @@ int main(int argc, char **argv) {
     long double req_per_s   = complete   / runtime_s;
     long double bytes_per_s = bytes      / runtime_s;
 
-    char *runtime_msg = format_time_us(runtime_us);
+    result.complete = complete;
+    result.time = format_time_us(runtime_us);
+    result.bytes = format_binary(bytes);
+    result.req_per_s = format_metric(req_per_s);
+    result.bytes_per_s = format_binary(bytes_per_s);
+    result.connections = format_metric(cfg.connections);
 
-    fprintf(g_log, "\nTEST RESULT:\n");
-    fprintf(g_log, "--------------\n");
-
-    fprintf(g_log, "\n::\n\n\t%"PRIu64" requests in %s, %sB read\n", complete, runtime_msg, format_binary(bytes));
-    if (errors.connect || errors.read || errors.write || errors.timeout) {
-        fprintf(g_log, "\tSocket errors: connect %d, read %d, write %d, timeout %d\n",
-               errors.connect, errors.read, errors.write, errors.timeout);
-    }
-
-    fprintf(g_log, "\n::\n\n\tComplete responses: %lu\n", complete);
-    fprintf(g_log, "\tNon-2xx or 3xx responses: %d\n", errors.status);
-
-    fprintf(g_log, "\tRequests/sec: %9.2Lf\n", req_per_s);
-    fprintf(g_log, "\tTransfer/sec: %10sB\n", format_binary(bytes_per_s));
+    print_test_result(&result, &errors);
+    print_result_details(&result, &errors);
 
     print_stats_error_code(&errors);
     print_stats_requests(statistics.requests);
@@ -232,15 +253,11 @@ int main(int argc, char **argv) {
         stats_correct(statistics.latency, interval);
     }
 
-    print_stats_header();
+   // print_stats_header();
     print_stats("Latency", statistics.latency, format_time_us);
     print_stats("Req/Sec", statistics.requests, format_metric);
-    if (cfg.latency) print_stats_latency(statistics.latency);
+    print_stats_latency(statistics.latency);
     
-    resultForm.bytes_per_s = format_binary(bytes_per_s);
-    resultForm.req_per_s = req_per_s;
-    resultForm.time = runtime_msg;
-    resultForm.connections = cfg.connections;
     print_result_form();
 
     if (script_has_done(L)) {
@@ -249,7 +266,9 @@ int main(int argc, char **argv) {
         script_done(L, statistics.latency, statistics.requests);
     }
 
+    fwrite(g_html_template, strlen(g_html_template), sizeof(char), g_log);
     fclose(g_log);
+    free(g_html_template);
 
     return 0;
 }
@@ -622,9 +641,62 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
     return 0;
 }
 
-static void print_stats_header() {
-    fprintf(g_log, "\n::\n\n\tThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
+char *str_replace(char *orig, char *rep, char *with) {
+    char *result; // the return string
+    char *ins;    // the next insert point
+    char *tmp;    // varies
+    int len_rep;  // length of rep (the string to remove)
+    int len_with; // length of with (the string to replace rep with)
+    int len_front; // distance between rep and end of last rep
+    int count;    // number of replacements
+
+    //sanity checks and initialization
+    if (!orig || !rep)
+        return NULL;
+    len_rep = strlen(rep);
+    if (len_rep == 0)
+        return NULL; // empty rep causes infinite loop during count
+    if (!with)
+        with = "";
+    len_with = strlen(with);
+
+    // count the number of replacements needed
+    ins = orig;
+    for (count = 0; (tmp = strstr(ins, rep)); ++count) {
+        ins = tmp + len_rep;
+    }
+
+    tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+
+    if (!result)
+        return NULL;
+
+    // first time through the loop, all the variable are set correctly
+    // from here on,
+    //    tmp points to the end of the result string
+    //    ins points to the next occurrence of rep in orig
+    //    orig points to the remainder of orig after "end of rep"
+    while (count--) {
+        ins = strstr(orig, rep);
+        len_front = ins - orig;
+        tmp = strncpy(tmp, orig, len_front) + len_front;
+        tmp = strcpy(tmp, with) + len_with;
+        orig += len_front + len_rep; // move to next "end of rep"
+    }
+    strcpy(tmp, orig);
+
+    return result;
 }
+
+static void record_html_log(char *key, char *value) {
+    char *p = str_replace(g_html_template, key, value);
+    free(g_html_template);
+    g_html_template = p;
+}
+
+//static void print_stats_header() {
+//    fprintf(g_log, "\n::\n\n\tThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
+//}
 
 static void print_units(long double n, char *(*fmt)(long double), int width) {
     char *msg = fmt(n);
@@ -634,28 +706,47 @@ static void print_units(long double n, char *(*fmt)(long double), int width) {
     if (isalpha(msg[len-2])) pad--;
     width -= pad;
 
-    fprintf(g_log, "%*.*s%.*s", width, width, msg, pad, "  ");
+    fprintf(stderr, "%*.*s%.*s", width, width, msg, pad, "  ");
 
     free(msg);
 }
 
 static void print_stats_error_code(errors *errors) {
-    fprintf(g_log, "\n::\n\n\terror code :\n");
+    char buff[1024];
+    int offset = 0;
+    if (errors->status == 0)
+        return ;
+
+    snprintf(buff, sizeof(buff), "error code :\n");
     int count = sizeof(errors->code)/sizeof(errors->code[0]);
     for (int i = 0; i < count; i++) {
-        if (errors->code[i] != 0)
-            fprintf(g_log, "\t  %u\n", i);
+        if (errors->code[i] != 0) {
+            offset = strlen(buff);
+            snprintf(buff + offset, sizeof(buff), "  %u:%u\n", i, errors->code[i]);
+        }
     }
+    record_html_log("${error_codes}", buff);
 }
 
+
 static void print_stats_requests(stats *stats) {
-    fprintf(g_log, "\n::\n\n\tFrequency of requests Per %lus\n", cfg.interval);
+    char buff[1024];
+    //int offset = 0;
+    snprintf(buff, sizeof(buff), "Frequency of requests Per %lus\n", cfg.interval);
+    char *x_coordinate = NULL;
+    char *y_coordinate = NULL;
+    aprintf(&x_coordinate, "labels: ['0', ", time);
+    aprintf(&y_coordinate, "data: [", time);
+
     uint64_t requests = 0;
     uint64_t requests_num = 0;
     uint64_t  i = 0;
     if (stats->max_location == 0) {
-        fprintf(g_log, "\t  %3lus %3lus\tReq/Sec:%6.2Lf\n", (uint64_t)0, cfg.interval, (long double)0);
-        return ;
+        aprintf(&x_coordinate, "'%d', ", cfg.interval);
+        aprintf(&y_coordinate, "%Lf, ", (long double)0);
+        //offset = strlen(buff);
+        //snprintf(buff + offset, sizeof(buff), "  %3lus %3lus\tReq/Sec:%6.2Lf\n", (uint64_t)0, cfg.interval, (long double)0);
+        goto END;
     }
 
     for (i = 0; i <= stats->max_location; i++) {
@@ -664,16 +755,31 @@ static void print_stats_requests(stats *stats) {
 
         if (requests_num == cfg.interval) {
             uint64_t indexInterval = i/cfg.interval;
-            fprintf(g_log, "\t  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
+            aprintf(&x_coordinate, "'%d', ", (indexInterval + 1) * cfg.interval);
+            aprintf(&y_coordinate, "%Lf, ", (long double)requests/cfg.interval);
+            //offset = strlen(buff);
+            //snprintf(buff + offset, sizeof(buff), "  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
             requests = 0;
             requests_num = 0;
         }
     }
 
     if (requests_num != 0) {
-        uint64_t indexInterval = (i - 1)/cfg.interval;
-        fprintf(g_log, "\t  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
+        //uint64_t indexInterval = (i - 1)/cfg.interval;
+        aprintf(&x_coordinate, "'%d', ", i);
+        aprintf(&y_coordinate, "%Lf, ", (long double)requests/requests_num);
+        //offset = strlen(buff);
+        //snprintf(buff + offset, sizeof(buff), "  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
     }
+
+END:
+    record_html_log("${requests_frequency}", buff);
+    aprintf(&x_coordinate, "]");
+    aprintf(&y_coordinate, "]");
+    record_html_log("${x_coordinate_label}", x_coordinate);
+    record_html_log("${y_coordinate_data}", y_coordinate);
+    free(x_coordinate);
+    free(y_coordinate);
 }
 
 static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
@@ -682,47 +788,96 @@ static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
     long double stdev = stats_stdev(stats, mean);
     long double PorNstdev = stats_within_stdev(stats, mean, stdev, 1);
 
-    fprintf(g_log, "\t  %-10s", name);
+    fprintf(stderr, "\t  %-10s", name);
     print_units(mean,  fmt, 8);
     print_units(stdev, fmt, 10);
     print_units(max,   fmt, 9);
-    fprintf(g_log, "%8.2Lf%%\n", PorNstdev);
+    fprintf(stderr, "%8.2Lf%%\n", PorNstdev);
     if (strcmp("Latency", name) == 0) {
-        resultForm.max = (long double)max/1000/1000;
-        resultForm.mean  = mean/1000/1000;
-        resultForm.stdev = stdev/1000/1000;
-        resultForm.PorNstdev = PorNstdev;
+        result.latency_max = fmt(max);
+        result.latency_mean  = fmt(mean);
+        result.latency_stdev = fmt(stdev);
+        result.latency_PorNstdev = format_metric(PorNstdev/100);
+    }else if (strcmp("Req/Sec", name) == 0) {
+        result.rps_max = fmt(max);
+        result.rps_mean  = fmt(mean);
+        result.rps_stdev = fmt(stdev);
+        result.rps_PorNstdev = format_metric(PorNstdev/100);
     }
 }
 
 static void print_stats_latency(stats *stats) {
+    if (!cfg.latency) 
+        record_html_log("${latency_distribution}", NULL);
+
     long double percentiles[] = { 50.0, 66.0, 75.0, 80.0, 90.0, 95.0, 98.0, 99.0, 100.0 };
-    fprintf(g_log, "\n::\n\n\tLatency Distribution\n");
+    char buff[1024];
+    int offset = 0;
+    snprintf(buff, sizeof(buff), "Latency Distribution\n");
+    offset = strlen(buff);
     for (size_t i = 0; i < sizeof(percentiles) / sizeof(long double); i++) {
         long double p = percentiles[i];
         uint64_t n = stats_percentile(stats, p);
-        fprintf(g_log, "\t%5.0Lf%%", p);
-        print_units(n, format_time_us, 10);
-        fprintf(g_log, "\n");
+        char *time_us = format_time_us(n);
+        snprintf(buff + offset, sizeof(buff), "%5.0Lf%% %s\n", p, time_us);
+        offset = strlen(buff);
+        free(time_us);
     }
+    record_html_log("${latency_distribution}", buff);
 }
 
 static void print_result_form() {
-    struct resultForm *o = &resultForm;
-    fprintf(g_log, "+----------+----------+------------+-------+----------------------------------+\n");
-    fprintf(g_log, "| 并发数   | 压力时间 | 吞吐率     |  RPS  |           响应时间 ( s )         |\n");
-    fprintf(g_log, "|          |          |            |       +-------+-------+-------+----------+\n");
-    fprintf(g_log, "|          |          |            |       |   avg |  max  | stdev | +/-stdev |\n");
-    fprintf(g_log, "+==========+==========+============+=======+=======+=======+=======+==========+\n");
-    fprintf(g_log, "| %7.00lu  |  %7.007s | %7.007sB   |%7.01Lf|%7.02Lf|%7.02Lf|%7.02Lf| %7.3Lf%% |\n", o->connections, o->time, o->bytes_per_s, o->req_per_s, o->mean, o->max, o->stdev, o->PorNstdev);
-    fprintf(g_log, "+----------+----------+------------+-------+-------+-------+-------+----------+\n");
+    struct resultForm *o = &result;
+    record_html_log("${concurrency}", o->connections);
+    record_html_log("${duration}", o->time);
+    record_html_log("${tps}", o->bytes_per_s);
+    record_html_log("${rps}", o->req_per_s);
+
+    record_html_log("${latency_avg}", o->latency_mean);
+    record_html_log("${latency_max}", o->latency_max);
+    record_html_log("${latency_stdev}", o->latency_stdev);
+    record_html_log("${latency_PorNstdev}", o->latency_PorNstdev);
+
+    record_html_log("${rps_avg}", o->rps_mean);
+    record_html_log("${rps_max}", o->rps_max);
+    record_html_log("${rps_stdev}", o->rps_stdev);
+    record_html_log("${rps_PorNstdev}", o->rps_PorNstdev);
 }
 
-static void print_test_parameter(const char* url) {
-    if (cfg.json_file != NULL)
-        fprintf(g_log, "\n::\n\n\tLoad Profile:%s\n", cfg.json_file);
+static void print_test_parameter(const char *url) {
+    record_html_log("${json_file}", cfg.json_file);
 
+    char buff[1024];
     char *time = format_time_s(cfg.duration);
-    fprintf(g_log, "\n::\n\n\tRunning %s test @ %s\n", time, url);
-    fprintf(g_log, "  \t%"PRIu64" threads and %"PRIu64" connections\n", cfg.threads, cfg.connections);
+    snprintf(buff, sizeof(buff), "Running %s test @ %s\n%"PRIu64" threads and %"PRIu64" connections",
+            time, url, cfg.threads, cfg.connections);
+    record_html_log("${test_content}", buff);
 }
+
+static void print_test_result(struct resultForm *o, errors *errors) {
+    char buff[1024];
+    int offset = 0;
+    snprintf(buff, sizeof(buff), "%"PRIu64" requests in %s, %sB read\n", o->complete, o->time, o->bytes);
+    if (errors->connect || errors->read || errors->write || errors->timeout) {
+        offset = strlen(buff);
+        snprintf(buff + offset, sizeof(buff), "Socket errors: connect %d, read %d, write %d, timeout %d\n",
+                errors->connect, errors->read, errors->write, errors->timeout);
+    }
+    record_html_log("${test_result}", buff);
+}
+
+static void print_result_details(struct resultForm *o, errors *errors) {
+    char buff[1024];
+    int offset = 0;
+
+    snprintf(buff, sizeof(buff), "Complete responses: %lu\n", o->complete);
+    offset = strlen(buff);
+    snprintf(buff + offset, sizeof(buff), "Non-2xx or 3xx responses: %d\n", errors->status);
+
+    offset = strlen(buff);
+    snprintf(buff + offset, sizeof(buff), "Requests/sec: %10s\n", o->req_per_s);
+    offset = strlen(buff);
+    snprintf(buff + offset, sizeof(buff), "Transfer/sec: %10sB\n", o->bytes_per_s);
+    record_html_log("${result_details}", buff);
+}
+

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Rreport for Performance Test</title>
+        <script src="dist/chart.js"></script>
+        <link rel="stylesheet" type="text/css" href="github.css">
+    </head>
+    <body>
+        <div class="container">
+            <div id="markup">
+                <article id="content" class="markdown-body">
+                    <div class="document">
+                        <div class="section" id="test-case">
+                            <h1>TEST CASE</h1>
+                            <div class="section" id="test-parameter">
+                                <h2>TEST PARAMETER:</h2>
+                                <pre class="codehilite">${json_file}</pre>
+                                <pre class="codehilite">${test_content}</pre>
+                            </div>
+                            <div class="section" id="test-result">
+                                <h2>TEST RESULT:</h2>
+                                <pre class="codehilite">${test_result}</pre>
+                                <pre class="codehilite">${result_details}</pre>
+                                <pre class="codehilite">${error_codes}</pre>
+                                <pre class="codehilite">${latency_distribution}</pre>
+                                <table border="1" class="docutils">
+                                    <colgroup>
+                                        <col width="10%" />
+                                        <col width="10%" />
+                                        <col width="12%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="10%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="10%" />
+                                    </colgroup>
+                                    <thead valign="bottom">
+                                        <tr><th class="head" rowspan="2">并发数</th>
+                                            <th class="head" rowspan="2">压力时间</th>
+                                            <th class="head" rowspan="2">吞吐率</th>
+                                            <th class="head" rowspan="2">RPS</th>
+                                            <th class="head" colspan="4">响应时间 ( s )</th>
+                                            <th class="head" colspan="4">请求频率 (req/s) </th>
+                                        </tr>
+                                        <tr><th class="head">avg</th>
+                                            <th class="head">max</th>
+                                            <th class="head">stdev</th>
+                                            <th class="head">+/-stdev</th>
+                                            <th class="head">avg</th>
+                                            <th class="head">max</th>
+                                            <th class="head">stdev</th>
+                                            <th class="head">+/-stdev</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody valign="top">
+                                        <tr><td>${concurrency}</td>
+                                            <td>${duration}</td>
+                                            <td>${tps}</td>
+                                            <td>${rps}</td>
+                                            <td>${latency_avg}</td>
+                                            <td>${latency_max}</td>
+                                            <td>${latency_stdev}</td>
+                                            <td>${latency_PorNstdev}</td>
+                                            <td>${rps_avg}</td>
+                                            <td>${rps_max}</td>
+                                            <td>${rps_stdev}</td>
+                                            <td>${rps_PorNstdev}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <div style="width: 100%">  
+                <pre class="codehilite">${requests_frequency}</pre>
+                <canvas id="myChart" width="400" height="400"></canvas>
+                <script>
+                var ctx = document.getElementById("myChart").getContext('2d');
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        ${x_coordinate_label},
+                        datasets: [{
+                            label: '# of Votes',
+                            ${y_coordinate_data},
+                            "fill":false,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(0,0,132,1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        elements: {
+                            line: {
+                                //tension: 0, // disables bezier curves
+                            }
+                        },
+                        scales: {
+                            yAxes: [{
+                                //stacked: false,
+                                display: true,
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'req/s'
+                                },
+                                ticks: {
+                                    //beginAtZero:true
+                                }
+                            }],
+                            xAxes: [{
+                                display: true,
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'second'
+                                }
+                            }]
+                        }
+                    }
+                });
+                </script>
+            </div>
+        </div>
+    </body>
+    <script type="text/x-omnimarkup-config">
+window.App.Context = {
+          buffer_id: 76,
+                timestamp: '1529398978.38716',
+                      revivable_key: 'QzpcVXNlcnNcemhhb2dxXERlc2t0b3BcbG9nLnJzdA=='
+                          };
+                              window.App.Options = {
+                                    ajax_polling_interval: 500,
+                                          mathjax_enabled: false
+                                              };
+    </script>
+    <script type="text/javascript" src="/public/jquery-2.1.3.min.js"></script>
+    <script type="text/javascript" src="/public/imagesloaded.pkgd.min.js"></script>
+    <script type="text/javascript" src="/public/app.js"></script>
+</html>
+

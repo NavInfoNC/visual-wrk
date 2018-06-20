@@ -26,6 +26,7 @@
 #include "zmalloc.h"
 
 struct config;
+struct resultForm;
 
 static void *thread_main(void *);
 static int connect_socket(thread *, connection *);
@@ -47,7 +48,7 @@ static uint64_t time_us();
 static int parse_args(struct config *, char *, char **, int, char **);
 static char *copy_url_part(char *, struct http_parser_url *, enum http_parser_url_fields);
 
-static void print_stats_header();
+//static void print_stats_header();
 static void print_stats(char *, stats *, char *(*)(long double));
 static void print_stats_latency(stats *);
 static void print_stats_requests(stats *stats);
@@ -55,4 +56,6 @@ static void print_stats_error_code(errors *errors);
 static void print_result_form();
 static void print_test_parameter(const char* url);
 
+static void print_test_result(struct resultForm *o, errors *errors);
+static void print_result_details(struct resultForm *o, errors *errors);
 #endif /* MAIN_H */

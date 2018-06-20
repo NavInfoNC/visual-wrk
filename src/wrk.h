@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <inttypes.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <netdb.h>
 #include <sys/socket.h>
 
