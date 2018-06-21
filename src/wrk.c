@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    g_log = fopen(cfg.log_file, "a+");
+    g_log = fopen(cfg.log_file, "w");
     if (g_log == NULL)
         g_log = stderr;
 
@@ -714,8 +714,10 @@ static void print_units(long double n, char *(*fmt)(long double), int width) {
 static void print_stats_error_code(errors *errors) {
     char buff[1024];
     int offset = 0;
-    if (errors->status == 0)
+    if (errors->status == 0) {
+        record_html_log("${error_codes}", NULL);
         return ;
+    }
 
     snprintf(buff, sizeof(buff), "error code :\n");
     int count = sizeof(errors->code)/sizeof(errors->code[0]);
@@ -744,8 +746,6 @@ static void print_stats_requests(stats *stats) {
     if (stats->max_location == 0) {
         aprintf(&x_coordinate, "'%d', ", cfg.interval);
         aprintf(&y_coordinate, "%Lf, ", (long double)0);
-        //offset = strlen(buff);
-        //snprintf(buff + offset, sizeof(buff), "  %3lus %3lus\tReq/Sec:%6.2Lf\n", (uint64_t)0, cfg.interval, (long double)0);
         goto END;
     }
 
@@ -757,19 +757,9 @@ static void print_stats_requests(stats *stats) {
             uint64_t indexInterval = i/cfg.interval;
             aprintf(&x_coordinate, "'%d', ", (indexInterval + 1) * cfg.interval);
             aprintf(&y_coordinate, "%Lf, ", (long double)requests/cfg.interval);
-            //offset = strlen(buff);
-            //snprintf(buff + offset, sizeof(buff), "  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, (indexInterval + 1) * cfg.interval, (long double)requests/cfg.interval);
             requests = 0;
             requests_num = 0;
         }
-    }
-
-    if (requests_num != 0) {
-        //uint64_t indexInterval = (i - 1)/cfg.interval;
-        aprintf(&x_coordinate, "'%d', ", i);
-        aprintf(&y_coordinate, "%Lf, ", (long double)requests/requests_num);
-        //offset = strlen(buff);
-        //snprintf(buff + offset, sizeof(buff), "  %3lus %3lus\tReq/Sec:%6.2Lf\n", indexInterval * cfg.interval, i, (long double)requests/requests_num);
     }
 
 END:

@@ -21,7 +21,7 @@
 
 #define MAX_THREAD_RATE_S   10000000
 #define SOCKET_TIMEOUT_MS   2000
-#define RECORD_INTERVAL_MS  200
+#define RECORD_INTERVAL_MS  50
 
 extern const char *VERSION;
 
