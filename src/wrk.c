@@ -89,7 +89,7 @@ static void usage() {
 }
 
 bool html_get_template() {
-    char *template_name = "template/test1.html";
+    char *template_name = "template/template1.html";
     struct stat s;
     if (stat(template_name, &s) == -1 || s.st_size == 0)
         return false;
@@ -124,8 +124,10 @@ int main(int argc, char **argv) {
     }
 
     g_log = fopen(cfg.log_file, "w");
-    if (g_log == NULL)
+    if (g_log == NULL) {
         g_log = stderr;
+        fprintf(stderr, "get last error:%d\n", errno);
+    }
 
     char *schema  = copy_url_part(url, &parts, UF_SCHEMA);
     char *host    = copy_url_part(url, &parts, UF_HOST);
@@ -698,18 +700,18 @@ static void record_html_log(char *key, char *value) {
 //    fprintf(g_log, "\n::\n\n\tThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
 //}
 
-static void print_units(long double n, char *(*fmt)(long double), int width) {
-    char *msg = fmt(n);
-    int len = strlen(msg), pad = 2;
-
-    if (isalpha(msg[len-1])) pad--;
-    if (isalpha(msg[len-2])) pad--;
-    width -= pad;
-
-    fprintf(stderr, "%*.*s%.*s", width, width, msg, pad, "  ");
-
-    free(msg);
-}
+//static void print_units(long double n, char *(*fmt)(long double), int width) {
+//    char *msg = fmt(n);
+//    int len = strlen(msg), pad = 2;
+//
+//    if (isalpha(msg[len-1])) pad--;
+//    if (isalpha(msg[len-2])) pad--;
+//    width -= pad;
+//
+//    fprintf(stderr, "%*.*s%.*s", width, width, msg, pad, "  ");
+//
+//    free(msg);
+//}
 
 static void print_stats_error_code(errors *errors) {
     char buff[1024];
@@ -778,11 +780,6 @@ static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
     long double stdev = stats_stdev(stats, mean);
     long double PorNstdev = stats_within_stdev(stats, mean, stdev, 1);
 
-    fprintf(stderr, "\t  %-10s", name);
-    print_units(mean,  fmt, 8);
-    print_units(stdev, fmt, 10);
-    print_units(max,   fmt, 9);
-    fprintf(stderr, "%8.2Lf%%\n", PorNstdev);
     if (strcmp("Latency", name) == 0) {
         result.latency_max = fmt(max);
         result.latency_mean  = fmt(mean);
