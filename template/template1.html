@@ -25,8 +25,12 @@
                                 <pre class="codehilite">${error_codes}</pre>
                                 <pre class="codehilite">${latency_distribution}</pre>
                                 <pre class="codehilite">${requests_frequency}
-                                    <canvas id="myChart" width="400" height="400"></canvas>
-                                    <script>var ctx = document.getElementById("myChart").getContext('2d');</script>
+                                    <canvas id="rpsChart" width="400" height="400"></canvas>
+                                    <script>var rpsCtx = document.getElementById("rpsChart").getContext('2d');</script>
+                                </pre>
+                                <pre class="codehilite">Latency Bar Chat
+                                    <canvas id="latencyChart" width="400" height="400"></canvas>
+                                    <script>var latencyCtx = document.getElementById("latencyChart").getContext('2d');</script>
                                 </pre>
                                 <table border="1" class="docutils">
                                     <colgroup>
@@ -48,7 +52,7 @@
                                             <th class="head" rowspan="2">压力时间</th>
                                             <th class="head" rowspan="2">吞吐率</th>
                                             <th class="head" rowspan="2">RPS</th>
-                                            <th class="head" colspan="4">响应时间 ( s )</th>
+                                            <th class="head" colspan="4">响应时间</th>
                                             <th class="head" colspan="4">线程请求频率 (req/s) </th>
                                         </tr>
                                         <tr><th class="head">avg</th>
@@ -96,50 +100,71 @@ window.App.Context = {
                                               };
     </script>
     <script>
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                ${x_coordinate_label},
-                datasets: [{
-                    ${y_coordinate_data},
-                    "fill":false,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(0,0,132,1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                elements: {
-                    line: {
-                        //tension: 0, // disables bezier curves
+    var latencyChart = new Chart(latencyCtx, {
+        type: 'bar',
+        data: {
+            ${latency_chat_label},
+            datasets: [
+            {
+                label: 'Bar1 Dataset',
+                ${latency_chat_data},
+                borderWidth: 1,
+                type: "bar",
+                borderColor: '#0000FF',
+                backgroundColor: '#00FFFF',
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'requests num'
                     }
-                },
-                scales: {
-                    yAxes: [{
-                        //stacked: false,
+                }],
+                xAxes: [{
+                    scaleLabel: {
                         display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'req/s'
-                        },
-                        ticks: {
-                            //beginAtZero:true
-                        }
-                    }],
-                    xAxes: [{
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'second'
-                        }
-                    }]
-                }
+                        labelString: 'time'
+                    }
+                }]
             }
-        });
+        }
+    });
+    </script>
+    <script>
+    var rpsChart = new Chart(rpsCtx, {
+        type: 'line',
+        data: {
+            ${rps_chat_label},
+            datasets: [{
+                ${rps_chat_data},
+                "fill":false,
+                borderWidth: 1,
+                borderColor: '#0000FF',
+                backgroundColor: '#00FFFF',
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'req/s'
+                    },
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }],
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'second'
+                    }
+                }]
+            }
+        }
+    });
     </script>
     <script type="text/javascript" src="/public/jquery-2.1.3.min.js"></script>
     <script type="text/javascript" src="/public/imagesloaded.pkgd.min.js"></script>

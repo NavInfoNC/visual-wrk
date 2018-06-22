@@ -88,7 +88,7 @@ static void usage() {
            "  Time arguments may include a time unit (2s, 2m, 2h)\n");
 }
 
-bool html_get_template() {
+static bool html_get_template() {
     char *template_name = "template/template1.html";
     struct stat s;
     if (stat(template_name, &s) == -1 || s.st_size == 0)
@@ -106,6 +106,15 @@ bool html_get_template() {
     return true;
 }
 
+static void decide_thread_num(struct config *cfg) {
+    if (cfg->connections < 500)
+        cfg->threads = 1;
+    else {
+        int cpu_num = get_nprocs();
+        cfg->threads = cfg->connections/500 < cpu_num ? cfg->connections/500 : cpu_num;
+    }
+}
+
 int main(int argc, char **argv) {
     thread_concurrency = false;
     char url[MAX_URL_LENGTH] = {0};
@@ -116,6 +125,8 @@ int main(int argc, char **argv) {
         usage();
         exit(1);
     }
+
+    decide_thread_num(&cfg);
 
     lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
     if (strlen(url) == 0 || !script_parse_url(url, &parts)) {
@@ -249,6 +260,7 @@ int main(int argc, char **argv) {
 
     print_stats_error_code(&errors);
     print_stats_requests(statistics.requests);
+    print_stats_latency_map(statistics.latency);
 
     if (complete / cfg.connections > 0) {
         int64_t interval = runtime_us / (complete / cfg.connections);
@@ -556,7 +568,6 @@ static struct option longopts[] = {
     { "duration",    required_argument, NULL, 'd' },
     { "json",        required_argument, NULL, 'j' },
     { "log",         required_argument, NULL, 'l' },
-    { "threads",     required_argument, NULL, 't' },
     { "script",      required_argument, NULL, 's' },
     { "header",      required_argument, NULL, 'H' },
     { "latency",     no_argument,       NULL, 'L' },
@@ -577,11 +588,8 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
     cfg->duration    = 10;
     cfg->timeout     = SOCKET_TIMEOUT_MS;
 
-    while ((c = getopt_long(argc, argv, "t:c:i:d:j:l:s:H:T:Lrv?", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "c:i:d:j:l:s:H:T:Lrv?", longopts, NULL)) != -1) {
         switch (c) {
-            case 't':
-                if (scan_metric(optarg, &cfg->threads)) return -1;
-                break;
             case 'c':
                 if (scan_metric(optarg, &cfg->connections)) return -1;
                 break;
@@ -732,6 +740,38 @@ static void print_stats_error_code(errors *errors) {
     record_html_log("${error_codes}", buff);
 }
 
+static void print_stats_latency_map(stats *stats) {
+    uint64_t interval = (stats->max - stats->min + 1)/19;
+    int latency_array[20];
+    memset(latency_array, 0, sizeof(latency_array));
+    char *x_coordinate = NULL;
+    char *y_coordinate = NULL;
+    aprintf(&x_coordinate, "labels: [");
+    aprintf(&y_coordinate, "data: [");
+
+    for (uint64_t num = stats->min; num <= stats->max; num++) {
+        int pos = (num - stats->min)/interval;
+        if (pos < 20 && pos >= 0)
+            latency_array[pos] += stats->data[num];
+        else
+            fprintf(stderr, "lantency position cross the border!\n");
+    }
+
+    char *time;
+    for (int i = 0; i < 20; i++) {
+        time = format_time_us(stats->min + interval * i);
+        aprintf(&x_coordinate, "'%s', ", time);
+        aprintf(&y_coordinate, "%d, ", latency_array[i]);
+        free(time);
+    }
+
+    aprintf(&x_coordinate, "]");
+    aprintf(&y_coordinate, "]");
+    record_html_log("${latency_chat_label}", x_coordinate);
+    record_html_log("${latency_chat_data}", y_coordinate);
+    free(x_coordinate);
+    free(y_coordinate);
+}
 
 static void print_stats_requests(stats *stats) {
     char buff[1024];
@@ -739,8 +779,8 @@ static void print_stats_requests(stats *stats) {
     snprintf(buff, sizeof(buff), "Frequency of requests Per %lus\n", cfg.interval);
     char *x_coordinate = NULL;
     char *y_coordinate = NULL;
-    aprintf(&x_coordinate, "labels: ['0', ", time);
-    aprintf(&y_coordinate, "data: [", time);
+    aprintf(&x_coordinate, "labels: ['0', ");
+    aprintf(&y_coordinate, "data: [");
 
     uint64_t requests = 0;
     uint64_t requests_num = 0;
@@ -768,8 +808,8 @@ END:
     record_html_log("${requests_frequency}", buff);
     aprintf(&x_coordinate, "]");
     aprintf(&y_coordinate, "]");
-    record_html_log("${x_coordinate_label}", x_coordinate);
-    record_html_log("${y_coordinate_data}", y_coordinate);
+    record_html_log("${rps_chat_label}", x_coordinate);
+    record_html_log("${rps_chat_data}", y_coordinate);
     free(x_coordinate);
     free(y_coordinate);
 }
@@ -836,8 +876,8 @@ static void print_test_parameter(const char *url) {
 
     char buff[1024];
     char *time = format_time_s(cfg.duration);
-    snprintf(buff, sizeof(buff), "Running %s test @ %s\n%"PRIu64" threads and %"PRIu64" connections",
-            time, url, cfg.threads, cfg.connections);
+    snprintf(buff, sizeof(buff), "Running %s test @ %s\n%"PRIu64" concurrency",
+            time, url, cfg.connections);
     record_html_log("${test_content}", buff);
 }
 
