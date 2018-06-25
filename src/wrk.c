@@ -740,17 +740,29 @@ static void print_stats_error_code(errors *errors) {
     record_html_log("${error_codes}", buff);
 }
 
+uint64_t digit_ceil(uint64_t x) {  
+    int len=0;  
+    while(x) {  
+        x/=10;  
+        len++;  
+        if (x < 10)
+            break;
+    }  
+    return (x + 1) * pow(10, len);
+}  
+
 static void print_stats_latency_map(stats *stats) {
-    uint64_t interval = (stats->max - stats->min + 1)/19;
-    int latency_array[20];
+    uint64_t max = digit_ceil(stats->max);
+    uint64_t interval = max/20;
+    int latency_array[21];
     memset(latency_array, 0, sizeof(latency_array));
     char *x_coordinate = NULL;
     char *y_coordinate = NULL;
     aprintf(&x_coordinate, "labels: [");
     aprintf(&y_coordinate, "data: [");
 
-    for (uint64_t num = stats->min; num <= stats->max; num++) {
-        int pos = (num - stats->min)/interval;
+    for (uint64_t num = 0; num < max; num++) {
+        int pos = num/interval;
         if (pos < 20 && pos >= 0)
             latency_array[pos] += stats->data[num];
         else
@@ -758,8 +770,8 @@ static void print_stats_latency_map(stats *stats) {
     }
 
     char *time;
-    for (int i = 0; i < 20; i++) {
-        time = format_time_us(stats->min + interval * i);
+    for (int i = 0; i <= 20; i++) {
+        time = format_time_us(interval * i);
         aprintf(&x_coordinate, "'%s', ", time);
         aprintf(&y_coordinate, "%d, ", latency_array[i]);
         free(time);

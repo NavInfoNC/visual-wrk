@@ -1,0 +1,72 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { label 'windows' }
+    parameters {
+        string (
+            defaultValue: 'F:\\Jenkins\\bin',
+            description: 'diectory that contain redc/pedc etc.(like toolset_5.1\\bin)',
+            name : 'BINROOT')
+
+        string (
+            defaultValue: 'F:\\Jenkins\\bin1',
+            description: 'diectory that contain redc/pedc etc.(like toolset_5.1\\bin)',
+            name : 'BINROOT1')
+
+        string (
+            defaultValue: 'F:\\Jenkins\\data',
+            description: 'data root contain raw/mapbar etc.',
+            name : 'DATAROOT')
+
+        string (
+            defaultValue: 'F:\\Jenkins\\output',
+            description: 'output direcoty',
+            name : 'OUTPUTDIR')
+
+        string (
+            defaultValue: 'china',
+            description: 'china or provinces division by \',\'(beijing,tianjin)',
+            name : 'PROVINCES')
+
+        choice(
+            choices: 'redc',
+            description: 'compile data type(only support redc now!)', 
+            name: 'MODULES')
+    }
+    environment {
+        buildParam = 'buildParam1'
+        build1Param = 'buildParam2'
+    }
+    stages {
+        stage('Build') {
+            parallel {
+                stage('BuildStep1Use5s') { 
+                    steps {
+                        echo "BinRoot:${params.BINROOT} dataRoot:${params.DATAROOT} outputDir:${params.OUTPUTDIR} provinces:${params.PROVINCES} modules:${params.MODULES}"
+                        echo "build.... ${buildParam}"
+                        bat "python testTrue.py ${buildParam}"
+                        sleep 5
+                    }
+                }
+                stage('BuildStep2Use5s') { 
+                    steps {
+                        echo "build.... ${build1Param}"
+                        bat "python testTrue.py ${build1Param}"
+                        sleep 5
+                    }
+                }
+            }
+        }
+        stage('Test') { 
+            steps {
+                echo 'test....1'
+            }
+        }
+        stage('Deploy') { 
+            steps {
+                echo 'deploy....'
+            }
+        }
+    }
+}
+
