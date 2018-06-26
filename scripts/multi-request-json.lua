@@ -1,7 +1,11 @@
 -- Module instantiation
+package.cpath=package.cpath .. ';lib/?.so'
+
 local cjson = require "cjson"
 local cjson2 = cjson.new()
 local cjson_safe = require "cjson.safe"
+package.path=package.path .. ';lib/?.lua'
+local mime = require "mime"
 -- Initialize the pseudo random number generator
 -- Resource: http://lua-users.org/wiki/MathLibraryTutorial
 math.randomseed(os.time())
@@ -83,6 +87,12 @@ request = function()
     counter = 1
   end
 
+  local body
+  if request_object.bodyType == "base64" then
+--      body = mime.b64(request_object.body)
+  else
+      body = request_object.body
+  end
   -- Return the request object with the current URL path
-  return wrk.format(request_object.method, request_object.path, request_object.headers, request_object.body)
+  return wrk.format(request_object.method, request_object.path, request_object.headers, body)
 end
