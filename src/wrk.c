@@ -493,6 +493,8 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     if (!c->written) {
         if (cfg.dynamic) {
             script_request(thread->L, &c->request, &c->length);
+            //printf("buf:%s\n", c->request);
+            //printf("offset:%s\n", c->request+c->length);
         }
         c->start   = time_us();
         c->pending = cfg.pipeline;
@@ -517,6 +519,7 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     return;
 
   error:
+    printf("error number:%d\n", errno);
     thread->errors.write++;
     reconnect_socket(thread, c);
 }
@@ -583,7 +586,7 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
     int c;
 
     memset(cfg, 0, sizeof(struct config));
-    cfg->threads     = 2;
+    cfg->threads     = 1;
     cfg->interval    = 1;
     cfg->connections = 10;
     cfg->duration    = 10;

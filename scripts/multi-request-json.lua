@@ -89,7 +89,7 @@ request = function()
 
   local body
   if request_object.bodyType == "base64" then
---      body = mime.b64(request_object.body)
+      body = mime.unb64(request_object.body)
   else
       body = request_object.body
   end
