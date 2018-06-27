@@ -37,7 +37,7 @@ pipeline {
         stage('Test') { 
             steps {
                 echo 'runing...'
-                sh('./wrk -i${sample_interval} -c${concurrency} -d${duration} -s scripts/multi-request-json.lua -j ${json_file} -l report/log.html --latency --timeout=100')
+                sh('./wrk -i${sample_interval} -c${concurrency} -d${duration} -s scripts/multi-request-json.lua -j ${json_file} -l report/log.html --latency')
             }
         }
         stage('Publish') {
