@@ -5,6 +5,10 @@
         <title>Rreport for Performance Test</title>
         <script src="Chart.js"></script>
         <link rel="stylesheet" type="text/css" href="github.css">
+        <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+        <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+        <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+        <style>#rps_chart {width: 100%; height : 500px;}</style>
     </head>
     <body>
         <div class="container">
@@ -25,8 +29,7 @@
                                 <pre class="codehilite">${error_codes}</pre>
                                 <pre class="codehilite">${latency_distribution}</pre>
                                 <pre class="codehilite">${requests_frequency}
-                                    <canvas id="rpsChart" width="400" height="400"></canvas>
-                                    <script>var rpsCtx = document.getElementById("rpsChart").getContext('2d');</script>
+                                <div id="rps_chart"></div>
                                 </pre>
                                 <pre class="codehilite">Latency Bar Chat
                                     <canvas id="latencyChart" width="400" height="400"></canvas>
@@ -100,71 +103,103 @@ window.App.Context = {
                                               };
     </script>
     <script>
-    var latencyChart = new Chart(latencyCtx, {
-        type: 'bar',
-        data: {
-            ${latency_chat_label},
-            datasets: [
-            {
-                label: 'Bar1 Dataset',
-                ${latency_chat_data},
-                borderWidth: 1,
-                type: "bar",
-                borderColor: '#0000FF',
-                backgroundColor: '#00FFFF',
+var latencyChart = new Chart(latencyCtx, {
+    type: 'bar',
+    data: {
+        ${latency_chat_label},
+        datasets: [
+        {
+            label: 'Bar1 Dataset',
+            ${latency_chat_data},
+            borderWidth: 1,
+            type: "bar",
+            borderColor: '#0000FF',
+            backgroundColor: '#00FFFF',
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                scaleLabel: {
+                    display: true,
+                    labelString: 'requests num'
+                }
+            }],
+            xAxes: [{
+                scaleLabel: {
+                    display: true,
+                    labelString: 'time'
+                }
             }]
-        },
-        options: {
-            scales: {
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'requests num'
-                    }
-                }],
-                xAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'time'
-                    }
-                }]
-            }
         }
-    });
+    }
+});
     </script>
-    <script>
-    var rpsChart = new Chart(rpsCtx, {
-        type: 'line',
-        data: {
-            ${rps_chat_label},
-            datasets: [{
-                ${rps_chat_data},
-                "fill":false,
-                borderWidth: 1,
-                borderColor: '#0000FF',
-                backgroundColor: '#00FFFF',
-            }]
-        },
-        options: {
-            scales: {
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'req/s'
-                    },
-                    ticks: {
-                        beginAtZero:true
-                    }
-                }],
-                xAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'second'
-                    }
-                }]
+    <script type="text/javascript">
+    var chartData = generateChartData();
+    var chart = AmCharts.makeChart("rps_chart", {
+        "type": "serial",
+        "theme": "light",
+        "marginRight": 80,
+        "autoMarginOffset": 20,
+        "marginTop": 7,
+        "dataProvider": chartData,
+        "valueAxes": [{
+            "axisAlpha": 0.2,
+            "dashLength": 1,
+            "position": "left"
+        }],
+        "mouseWheelZoomEnabled": true,
+        "dataDateFormat": "YYYY-MM-DD HH:NN:SS",
+        "graphs": [
+        {
+            "id": "g3",
+            "balloonText": "rps [[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "bulletColor": "#FFFFFF",
+            "hideBulletsCount": 50,
+            "title": "rps line",
+            "valueField": "rps",
+            "useLineColorForBulletBorder": true,
+            "balloon":{
+                "drop":true
             }
         }
+        ],
+        "chartScrollbar": {
+            "autoGridCount": true,
+            "graph": "g1",
+            "scrollbarHeight": 40
+        },
+        "chartCursor": {
+            "limitToGraph":"g1"
+        },
+        "categoryField": "date",
+        "categoryAxis": {
+            "parseDates": true,
+            "minPeriod" : "ss",
+            "axisColor": "#DADADA",
+            "dashLength": 1,
+            "minorGridEnabled": true
+        },
+        "export": {
+            "enabled": true
+        }
     });
+    
+    chart.addListener("rendered", zoomChart);
+    zoomChart();
+    
+    // this method is called when chart is first inited as we listen for "rendered" event
+    function zoomChart() {
+        chart.zoomOut();
+    }
+    // generate some random data, quite different range
+    function generateChartData() {
+        var chartData = [${rps_chat_data}];
+        return chartData;
+    }
     </script>
     <script type="text/javascript" src="/public/jquery-2.1.3.min.js"></script>
     <script type="text/javascript" src="/public/imagesloaded.pkgd.min.js"></script>

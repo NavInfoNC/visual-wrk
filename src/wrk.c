@@ -66,7 +66,7 @@ static void handler(int sig) {
     stop = 1;
 }
 
-static FILE *g_log;
+static FILE *g_html;
 static char *g_html_template;
 
 static void usage() {
@@ -89,22 +89,20 @@ static void usage() {
            "  Time arguments may include a time unit (2s, 2m, 2h)\n");
 }
 
-static bool html_get_template() {
-    char *template_name = "template/template1.html";
+static char *get_template(char *template_name) {
     struct stat s;
     if (stat(template_name, &s) == -1 || s.st_size == 0)
-        return false;
+        return NULL;
 
     FILE *fp = fopen(template_name, "r");
     if (fp == NULL)
-        return false;
+        return NULL;
 
-    g_html_template = (char *)malloc(sizeof(char) * s.st_size + 1);
-    fread(g_html_template, s.st_size, sizeof(char), fp);
-
+    char *template = (char *)malloc(sizeof(char) * s.st_size + 1);
+    fread(template, s.st_size, sizeof(char), fp);
     fclose(fp);
 
-    return true;
+    return template;
 }
 
 static void decide_thread_num(struct config *cfg) {
@@ -135,9 +133,9 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    g_log = fopen(cfg.log_file, "w");
-    if (g_log == NULL) {
-        g_log = stderr;
+    g_html = fopen(cfg.log_file, "w");
+    if (g_html == NULL) {
+        g_html = stderr;
         fprintf(stderr, "get last error:%d\n", errno);
     }
 
@@ -208,8 +206,10 @@ int main(int argc, char **argv) {
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
-    if (!html_get_template()) {
+    g_html_template = get_template("template/template1.html");
+    if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
+        free(g_html_template);
         exit(1);
     }
 
@@ -268,7 +268,6 @@ int main(int argc, char **argv) {
         stats_correct(statistics.latency, interval);
     }
 
-   // print_stats_header();
     print_stats("Latency", statistics.latency, format_time_us);
     print_stats("Req/Sec", statistics.requests, format_metric);
     print_stats_latency(statistics.latency);
@@ -281,8 +280,8 @@ int main(int argc, char **argv) {
         script_done(L, statistics.latency, statistics.requests);
     }
 
-    fwrite(g_html_template, strlen(g_html_template), sizeof(char), g_log);
-    fclose(g_log);
+    fwrite(g_html_template, strlen(g_html_template), sizeof(char), g_html);
+    fclose(g_html);
     free(g_html_template);
 
     return 0;
@@ -667,11 +666,14 @@ char *str_replace(char *orig, char *rep, char *with) {
     //sanity checks and initialization
     if (!orig || !rep)
         return NULL;
+
     len_rep = strlen(rep);
     if (len_rep == 0)
         return NULL; // empty rep causes infinite loop during count
+
     if (!with)
         with = "";
+
     len_with = strlen(with);
 
     // count the number of replacements needed
@@ -685,17 +687,12 @@ char *str_replace(char *orig, char *rep, char *with) {
     if (!result)
         return NULL;
 
-    // first time through the loop, all the variable are set correctly
-    // from here on,
-    //    tmp points to the end of the result string
-    //    ins points to the next occurrence of rep in orig
-    //    orig points to the remainder of orig after "end of rep"
     while (count--) {
         ins = strstr(orig, rep);
         len_front = ins - orig;
         tmp = strncpy(tmp, orig, len_front) + len_front;
         tmp = strcpy(tmp, with) + len_with;
-        orig += len_front + len_rep; // move to next "end of rep"
+        orig += len_front + len_rep;
     }
     strcpy(tmp, orig);
 
@@ -707,23 +704,6 @@ static void record_html_log(char *key, char *value) {
     free(g_html_template);
     g_html_template = p;
 }
-
-//static void print_stats_header() {
-//    fprintf(g_log, "\n::\n\n\tThread Stats%6s%11s%8s%12s\n", "Avg", "Stdev", "Max", "+/- Stdev");
-//}
-
-//static void print_units(long double n, char *(*fmt)(long double), int width) {
-//    char *msg = fmt(n);
-//    int len = strlen(msg), pad = 2;
-//
-//    if (isalpha(msg[len-1])) pad--;
-//    if (isalpha(msg[len-2])) pad--;
-//    width -= pad;
-//
-//    fprintf(stderr, "%*.*s%.*s", width, width, msg, pad, "  ");
-//
-//    free(msg);
-//}
 
 static void print_stats_error_code(errors *errors) {
     char buff[1024];
@@ -791,43 +771,29 @@ static void print_stats_latency_map(stats *stats) {
 
 static void print_stats_requests(stats *stats) {
     char buff[1024];
-    //int offset = 0;
     snprintf(buff, sizeof(buff), "Frequency of requests Per %lus\n", cfg.interval);
-    char *x_coordinate = NULL;
-    char *y_coordinate = NULL;
-    aprintf(&x_coordinate, "labels: ['0', ");
-    aprintf(&y_coordinate, "data: [");
 
     uint64_t requests = 0;
     uint64_t requests_num = 0;
-    uint64_t  i = 0;
-    if (stats->max_location == 0) {
-        aprintf(&x_coordinate, "'%d', ", cfg.interval);
-        aprintf(&y_coordinate, "%Lf, ", (long double)0);
-        goto END;
-    }
 
-    for (i = 0; i <= stats->max_location; i++) {
+    char *rps_data = NULL;
+    char timeArray[40];
+    for (uint64_t i = 0; i <= stats->max_location; i++) {
         requests += stats->requests[i];
         requests_num++;
 
         if (requests_num == cfg.interval) {
-            uint64_t indexInterval = i/cfg.interval;
-            aprintf(&x_coordinate, "'%d', ", (indexInterval + 1) * cfg.interval);
-            aprintf(&y_coordinate, "%Lf, ", (long double)requests/cfg.interval);
+            time_t time = start_thread_time/1000/1000 + i;
+            strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
+            aprintf(&rps_data, "\n{\"date\":\"%s\", \"rps\":%Lf},", timeArray, (long double)requests/cfg.interval);
             requests = 0;
             requests_num = 0;
         }
     }
 
-END:
     record_html_log("${requests_frequency}", buff);
-    aprintf(&x_coordinate, "]");
-    aprintf(&y_coordinate, "]");
-    record_html_log("${rps_chat_label}", x_coordinate);
-    record_html_log("${rps_chat_data}", y_coordinate);
-    free(x_coordinate);
-    free(y_coordinate);
+    record_html_log("${rps_chat_data}", rps_data);
+    free(rps_data);
 }
 
 static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
