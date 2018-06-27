@@ -19,7 +19,18 @@ pipeline {
             name : 'duration')
 
         choice (
-            choices: 'data/grid.json',
+                choices: 'data/grid.json\
+                data/poi.json\
+                data/route/route0_3km.json\
+                data/route/route100_500km.json\
+                data/route/route10_50km.json\
+                data/route/route1k_2kkm.json\
+                data/route/route2kkm.json\
+                data/route/route3_10km.json\
+                data/route/route500_1kkm.json\
+                data/route/route50_100km.json\
+                data/ti_enroute_v1.json\
+                data/ti_enroute_v2.json'
             description: 'Load json data for script',
             name : 'json_file')
     }

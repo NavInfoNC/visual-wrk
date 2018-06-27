@@ -1,0 +1,626 @@
+[
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12175004,4104587&toAddr=12167969,4089180&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12189959,4105068&toAddr=12184415,4105571&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12210801,4112858&toAddr=12203607,4108442&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12186952,4113389&toAddr=12205384,4112748&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12255803,4083279&toAddr=12243813,4085528&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12206208,4107441&toAddr=12209407,4077068&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12205384,4112748&toAddr=12187829,4112814&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12182527,4099289&toAddr=12169318,4103559&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12204493,4112120&toAddr=12186747,4113718&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12205304,4076563&toAddr=12206208,4107441&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12206208,4107441&toAddr=12204791,4080274&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12077324,4372245&toAddr=12066597,4366934&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12304696,4192284&toAddr=12306544,4184343&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12186747,4113718&toAddr=12204455,4112327&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12275340,4109100&toAddr=12281523,4127109&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11862690,3905995&toAddr=11843595,3929370&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12089199,4246405&toAddr=12110095,4230588&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12066597,4366934&toAddr=12077323,4372247&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12113891,4227069&toAddr=12145451,4212380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12148892,4099707&toAddr=12134000,4099809&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12288745,4179517&toAddr=12298269,4189929&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12208472,4113675&toAddr=12244175,4114257&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12188305,4119433&toAddr=12178971,4112212&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12304929,4191246&toAddr=12314131,4191494&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12209886,4112630&toAddr=12187274,4113101&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12244478,4114867&toAddr=12210485,4114217&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12178971,4112212&toAddr=12188451,4119831&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12169748,4204233&toAddr=12187411,4191484&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12181043,4114206&toAddr=12188709,4119851&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12210525,4112702&toAddr=12197591,4122952&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12096325,4243132&toAddr=12106881,4236930&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12190855,4105116&toAddr=12178713,4095686&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12203657,4111717&toAddr=12209728,4114920&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12177016,4110728&toAddr=12181950,4113080&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12209731,4114946&toAddr=12202870,4111564&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12210261,4115385&toAddr=12185771,4113107&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12181874,4113082&toAddr=12187199,4119189&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12214992,4136543&toAddr=12208098,4115271&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12284127,4145447&toAddr=12294049,4148814&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12209728,4114920&toAddr=12203500,4105688&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12204702,4083289&toAddr=12198685,4075311&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12185771,4113107&toAddr=12209799,4114784&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12208098,4115271&toAddr=12215029,4136643&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12299472,4182354&toAddr=12304345,4192169&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12148791,4206468&toAddr=12174461,4199945&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12188782,4119483&toAddr=12181840,4113084&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12198685,4075311&toAddr=12204483,4086390&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12179717,4112021&toAddr=12188154,4119655&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12188685,4119109&toAddr=12180560,4114129&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10265157,2502240&toAddr=10292422,2508522&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12188689,4119023&toAddr=12179181,4111822&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12177361,4198289&toAddr=12187533,4191658&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12187678,4180570&toAddr=12182460,4158733&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12179181,4111822&toAddr=12188764,4119507&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12182460,4158733&toAddr=12183053,4144417&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12204699,4083250&toAddr=12199077,4076012&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10300896,3764078&toAddr=10337512,3753712&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12233285,4141581&toAddr=12227442,4133066&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12203834,4108000&toAddr=12213574,4098860&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12289001,4179536&toAddr=12308726,4186067&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12289474,4161187&toAddr=12325161,4178644&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10365238,3741565&toAddr=10377231,3727458&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12210492,4131768&toAddr=12196870,4112872&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10377943,3726686&toAddr=10392187,3721280&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12217681,4110116&toAddr=12229043,4104918&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10394302,3720768&toAddr=10410201,3725630&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10426856,3740619&toAddr=10410070,3739512&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11414251,2246708&toAddr=11411353,2254396&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11612038,3995030&toAddr=11662041,3990678&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11714726,4008005&toAddr=11664590,4012557&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11664590,4012557&toAddr=11714726,4008005&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11962118,3991576&toAddr=11916780,3970438&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11715002,3913409&toAddr=11764152,3902666&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11764152,3902666&toAddr=11715002,3913409&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11764984,3901493&toAddr=11716653,3915743&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11720943,3916653&toAddr=11768943,3901278&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11613999,4013671&toAddr=11664590,4012557&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11664590,4012557&toAddr=11613999,4013671&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11770972,3898921&toAddr=11722012,3912362&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11722012,3912362&toAddr=11770972,3898921&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11613628,4015867&toAddr=11664590,4012557&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12674112,4572769&toAddr=12624275,4562302&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12624275,4562302&toAddr=12674112,4572769&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12481763,4510968&toAddr=12432081,4522026&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11771142,3903320&toAddr=11720932,3913523&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11720932,3913523&toAddr=11771142,3903320&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11716653,3915743&toAddr=11766060,3902060&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11975595,3995644&toAddr=11924923,3989380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11664590,4012557&toAddr=11715814,4019303&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11764152,3902666&toAddr=11714646,3916800&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11766344,3901623&toAddr=11716653,3915743&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11716653,3915743&toAddr=11766344,3901621&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10107445,3881281&toAddr=10057601,3894126&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10107445,3881281&toAddr=10057588,3894149&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12154401,3896190&toAddr=12103273,3887314&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11766914,3901610&toAddr=11716653,3915743&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11716653,3915743&toAddr=11766914,3901610&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11975626,4001089&toAddr=11924923,3989380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11661498,4005455&toAddr=11714383,4006680&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11112603,4070577&toAddr=11164201,4081514&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12520044,4442745&toAddr=12571724,4453325&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12571724,4453325&toAddr=12520044,4442745&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12395718,4188085&toAddr=12343147,4180572&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11976741,4000589&toAddr=11924923,3989380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11973969,4922952&toAddr=11921202,4927612&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=9027710,4260699&toAddr=9048385,4309747&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11662742,3990428&toAddr=11609511,3996496&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11112603,4070577&toAddr=11165409,4079918&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12289386,4177854&toAddr=12343711,4181705&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11612038,3995030&toAddr=11666451,3991272&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11666729,3990824&toAddr=11612038,3995030&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11428572,3808437&toAddr=11483246,3802807&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11612038,3995030&toAddr=11662041,3990678&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11714726,4008005&toAddr=11664590,4012557&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11664590,4012557&toAddr=11714726,4008005&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11962118,3991576&toAddr=11916780,3970438&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11715002,3913409&toAddr=11764152,3902666&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11764152,3902666&toAddr=11715002,3913409&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11764984,3901493&toAddr=11716653,3915743&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11720943,3916653&toAddr=11768943,3901278&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11613999,4013671&toAddr=11664590,4012557&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11664590,4012557&toAddr=11613999,4013671&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11770972,3898921&toAddr=11722012,3912362&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11722012,3912362&toAddr=11770972,3898921&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11613628,4015867&toAddr=11664590,4012557&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12674112,4572769&toAddr=12624275,4562302&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12624275,4562302&toAddr=12674112,4572769&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12481763,4510968&toAddr=12432081,4522026&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11771142,3903320&toAddr=11720932,3913523&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11720932,3913523&toAddr=11771142,3903320&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11716653,3915743&toAddr=11766060,3902060&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11975595,3995644&toAddr=11924923,3989380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11664590,4012557&toAddr=11715814,4019303&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11764152,3902666&toAddr=11714646,3916800&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11766344,3901623&toAddr=11716653,3915743&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11716653,3915743&toAddr=11766344,3901621&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10107445,3881281&toAddr=10057601,3894126&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=10107445,3881281&toAddr=10057588,3894149&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12154401,3896190&toAddr=12103273,3887314&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11766914,3901610&toAddr=11716653,3915743&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11716653,3915743&toAddr=11766914,3901610&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11975626,4001089&toAddr=11924923,3989380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11661498,4005455&toAddr=11714383,4006680&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11112603,4070577&toAddr=11164201,4081514&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12520044,4442745&toAddr=12571724,4453325&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12571724,4453325&toAddr=12520044,4442745&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12395718,4188085&toAddr=12343147,4180572&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11976741,4000589&toAddr=11924923,3989380&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11973969,4922952&toAddr=11921202,4927612&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=9027710,4260699&toAddr=9048385,4309747&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11662742,3990428&toAddr=11609511,3996496&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11112603,4070577&toAddr=11165409,4079918&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12289386,4177854&toAddr=12343711,4181705&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11612038,3995030&toAddr=11666451,3991272&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11666729,3990824&toAddr=11612038,3995030&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    },
+    {
+        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11428572,3808437&toAddr=11483246,3802807&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+        "method": "GET"
+    }
+]
