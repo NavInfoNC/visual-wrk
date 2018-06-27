@@ -10,9 +10,9 @@
 
 stats *stats_alloc(uint64_t max) {
     uint64_t limit = max + 1;
-    stats *s = zcalloc(sizeof(stats) + sizeof(uint64_t) * limit);
+    stats *s = zcalloc(sizeof(stats) + sizeof(uint64_t) * limit * 2);
     s->requests = zcalloc(sizeof(uint64_t) * limit);
-    s->success = malloc(sizeof(uint64_t) * limit);
+    s->success = zcalloc(sizeof(uint64_t) * limit);
     s->max_location = 0;
     s->limit = limit;
     s->min   = UINT64_MAX;
@@ -21,7 +21,7 @@ stats *stats_alloc(uint64_t max) {
 
 void stats_free(stats *stats) {
     zfree(stats->requests);
-    free(stats->success);
+    zfree(stats->success);
     zfree(stats);
 }
 

@@ -33,7 +33,7 @@ typedef struct {
     uint64_t connections;
     uint64_t complete;
     uint64_t requests;
-    uint64_t success;
+    uint64_t succ;
     uint64_t bytes;
     uint64_t start;
     lua_State *L;

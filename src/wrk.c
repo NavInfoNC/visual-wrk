@@ -364,10 +364,10 @@ static int reconnect_socket(thread *thread, connection *c) {
 
 static int record_rate(aeEventLoop *loop, long long id, void *data) {
     thread *thread = data;
-    if (thread->success > 0) {
+    if (thread->succ > 0) {
         uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
-        stats_record_requests_per_sec(statistics.requests, false, thread->success, time_interval);
-        thread->success = 0;
+        stats_record_requests_per_sec(statistics.requests, false, thread->succ, time_interval);
+        thread->succ = 0;
     }
 
     if (thread->requests > 0) {
@@ -434,7 +434,7 @@ static int response_complete(http_parser *parser) {
         thread->errors.code[status] += 1;
         thread->errors.status++;
     }else {
-        thread->success++;
+        thread->succ++;
     }
 
     if (c->headers.buffer) {
