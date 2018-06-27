@@ -19,18 +19,7 @@ pipeline {
             name : 'duration')
 
         choice (
-                choices: 'data/grid.json\
-                data/poi.json\
-                data/route/route0_3km.json\
-                data/route/route100_500km.json\
-                data/route/route10_50km.json\
-                data/route/route1k_2kkm.json\
-                data/route/route2kkm.json\
-                data/route/route3_10km.json\
-                data/route/route500_1kkm.json\
-                data/route/route50_100km.json\
-                data/ti_enroute_v1.json\
-                data/ti_enroute_v2.json'
+            choices: "data/grid.json\ndata/poi.json\ndata/route/route0_3km.json\ndata/route/route100_500km.json\ndata/route/route10_50km.json\ndata/route/route1k_2kkm.json\ndata/route/route2kkm.json\ndata/route/route3_10km.json\ndata/route/route500_1kkm.json\ndata/route/route50_100km.json\ndata/ti_enroute_v1.json\ndata/ti_enroute_v2.json",
             description: 'Load json data for script',
             name : 'json_file')
     }
@@ -48,7 +37,7 @@ pipeline {
         stage('Test') { 
             steps {
                 echo 'runing...'
-                sh('./wrk -i${sample_interval} -c${concurrency} -d${duration} -s scripts/multi-request-json.lua -j ${json_file} -l report/log.html --latency')
+                sh('./wrk -i${sample_interval} -c${concurrency} -d${duration} -s scripts/multi-request-json.lua -j ${json_file} -l report/log.html --latency --timeout=100')
             }
         }
         stage('Publish') {

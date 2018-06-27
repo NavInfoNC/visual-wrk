@@ -1,18 +1,22 @@
-[
-    {
-        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12339939,4188625&toAddr=12624762,4529268&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
-        "method": "GET"
-    },
-    {
-        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11638700,3994399&toAddr=11362014,3479478&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
-        "method": "GET"
-    },
-    {
-        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12148554,3123684&mid=11580277,2872893&toAddr=11443888,2809200&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
-        "method": "GET"
-    },
-    {
-        "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11327153,2318386&toAddr=10752038,2632972&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
-        "method": "GET"
-    }
-]
+{
+    "url":"https://navicore.mapbar.com",
+    "request":
+    [
+        {
+            "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12339939,4188625&toAddr=12624762,4529268&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+            "method": "GET"
+        },
+        {
+            "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11638700,3994399&toAddr=11362014,3479478&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+            "method": "GET"
+        },
+        {
+            "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=12148554,3123684&mid=11580277,2872893&toAddr=11443888,2809200&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+            "method": "GET"
+        },
+        {
+            "path": "/nc/v1/routing?dv=2.1.6&st=4&sAddr=11327153,2318386&toAddr=10752038,2632972&tmc=1&flag=0,2,3,4,5,6,7,ts,9,10,linkId,11,linkDir,16&rpet=2&mrn=3&guidanceVersion=5000",
+            "method": "GET"
+        }
+    ]
+}
