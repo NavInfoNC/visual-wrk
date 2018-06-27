@@ -81,7 +81,6 @@ static void usage() {
            "    -j, --json        <S>  Load json data for script  \n"
            "    -H, --header      <H>  Add header to request      \n"
            "        --latency          Print latency statistics   \n"
-           "        --timeout     <T>  Socket/request timeout     \n"
            "    -l  --log              Output report in rst format\n"
            "    -v, --version          Print version details      \n"
            "                                                      \n"
@@ -365,6 +364,11 @@ static int reconnect_socket(thread *thread, connection *c) {
 
 static int record_rate(aeEventLoop *loop, long long id, void *data) {
     thread *thread = data;
+    if (thread->success > 0) {
+        uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
+        stats_record_requests_per_sec(statistics.requests, false, thread->success, time_interval);
+        thread->success = 0;
+    }
 
     if (thread->requests > 0) {
         uint64_t elapsed_ms = (time_us() - thread->start) / 1000;
@@ -373,7 +377,7 @@ static int record_rate(aeEventLoop *loop, long long id, void *data) {
         stats_record(statistics.requests, requests);
 
         uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
-        stats_record_requests_per_sec(statistics.requests, thread->requests, time_interval);
+        stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
 
         thread->requests = 0;
         thread->start    = time_us();
@@ -429,6 +433,8 @@ static int response_complete(http_parser *parser) {
     if (status > 399) {
         thread->errors.code[status] += 1;
         thread->errors.status++;
+    }else {
+        thread->success++;
     }
 
     if (c->headers.buffer) {
@@ -774,18 +780,22 @@ static void print_stats_requests(stats *stats) {
     snprintf(buff, sizeof(buff), "Frequency of requests Per %lus\n", cfg.interval);
 
     uint64_t requests = 0;
+    uint64_t success = 0;
     uint64_t requests_num = 0;
 
     char *rps_data = NULL;
     char timeArray[40];
     for (uint64_t i = 0; i <= stats->max_location; i++) {
         requests += stats->requests[i];
+        success += stats->success[i];
         requests_num++;
 
         if (requests_num == cfg.interval) {
             time_t time = start_thread_time/1000/1000 + i;
             strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
-            aprintf(&rps_data, "\n{\"date\":\"%s\", \"rps\":%Lf},", timeArray, (long double)requests/cfg.interval);
+            aprintf(&rps_data, "\n{\"date\":\"%s\", \"rps\":%Lf, \"success\":%Lf},", 
+                    timeArray, (long double)requests/cfg.interval, (long double)success/cfg.interval);
+            success = 0;
             requests = 0;
             requests_num = 0;
         }
@@ -867,10 +877,10 @@ static void print_test_result(struct resultForm *o, errors *errors) {
     char buff[1024];
     int offset = 0;
     snprintf(buff, sizeof(buff), "%"PRIu64" requests in %s, %sB read\n", o->complete, o->time, o->bytes);
-    if (errors->connect || errors->read || errors->write || errors->timeout) {
+    if (errors->connect || errors->read || errors->write) {
         offset = strlen(buff);
-        snprintf(buff + offset, sizeof(buff), "Socket errors: connect %d, read %d, write %d, timeout %d\n",
-                errors->connect, errors->read, errors->write, errors->timeout);
+        snprintf(buff + offset, sizeof(buff), "Socket errors: connect %d, read %d, write %d\n",
+                errors->connect, errors->read, errors->write);
     }
     record_html_log("${test_result}", buff);
 }

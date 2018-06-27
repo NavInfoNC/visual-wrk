@@ -12,6 +12,7 @@ stats *stats_alloc(uint64_t max) {
     uint64_t limit = max + 1;
     stats *s = zcalloc(sizeof(stats) + sizeof(uint64_t) * limit);
     s->requests = zcalloc(sizeof(uint64_t) * limit);
+    s->success = zcalloc(sizeof(uint64_t) * limit);
     s->max_location = 0;
     s->limit = limit;
     s->min   = UINT64_MAX;
@@ -20,6 +21,7 @@ stats *stats_alloc(uint64_t max) {
 
 void stats_free(stats *stats) {
     zfree(stats->requests);
+    zfree(stats->success);
     zfree(stats);
 }
 
@@ -49,10 +51,15 @@ static void realtime_output_request_num(stats *stats, uint64_t sec) {
     }
 }
 
-int stats_record_requests_per_sec(stats *stats, uint64_t requests_num, uint64_t sec) {
+int stats_record_requests_per_sec(stats *stats, bool type, uint64_t requests_num, uint64_t sec) {
     if (sec >= stats->limit) return 0;
-    __sync_fetch_and_add(&stats->requests[sec], requests_num);
-    realtime_output_request_num(stats, sec);
+
+    if (type) {
+        __sync_fetch_and_add(&stats->requests[sec], requests_num);
+        realtime_output_request_num(stats, sec);
+    }else
+        __sync_fetch_and_add(&stats->success[sec], requests_num);
+
     if (sec > stats->max_location)
         stats->max_location = sec;
     return 1;

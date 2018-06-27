@@ -154,7 +154,7 @@ var latencyChart = new Chart(latencyCtx, {
         "graphs": [
         {
             "id": "g3",
-            "balloonText": "rps [[value]]",
+            "balloonText": "response per second [[value]]",
             "bullet": "round",
             "bulletBorderAlpha": 1,
             "bulletColor": "#FFFFFF",
@@ -162,6 +162,21 @@ var latencyChart = new Chart(latencyCtx, {
             "title": "rps line",
             "valueField": "rps",
             "useLineColorForBulletBorder": true,
+            "balloon":{
+                "drop":true
+            }
+        },
+        {
+            "id": "g5",
+            "balloonText": "success per second [[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "bulletColor": "#FFFFFF",
+            "hideBulletsCount": 50,
+            "title": "success line",
+            "valueField": "success",
+            "useLineColorForBulletBorder": true,
+            "connect": false,
             "balloon":{
                 "drop":true
             }

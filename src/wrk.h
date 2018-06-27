@@ -21,7 +21,7 @@
 #define RECVBUF  8192
 
 #define MAX_THREAD_RATE_S   10000000
-#define SOCKET_TIMEOUT_MS   2000
+#define SOCKET_TIMEOUT_MS   3600
 #define RECORD_INTERVAL_MS  50
 
 extern const char *VERSION;
@@ -33,6 +33,7 @@ typedef struct {
     uint64_t connections;
     uint64_t complete;
     uint64_t requests;
+    uint64_t success;
     uint64_t bytes;
     uint64_t start;
     lua_State *L;
