@@ -109,7 +109,7 @@ var latencyChart = new Chart(latencyCtx, {
         ${latency_chat_label},
         datasets: [
         {
-            label: 'Bar1 Dataset',
+            label: 'requests number',
             ${latency_chat_data},
             borderWidth: 1,
             type: "bar",
@@ -153,22 +153,19 @@ var latencyChart = new Chart(latencyCtx, {
         "dataDateFormat": "YYYY-MM-DD HH:NN:SS",
         "graphs": [
         {
-            "id": "g3",
-            "balloonText": "response per second [[value]]",
+            "id": "g1",
+            "balloonText": "requests: [[value]]rps",
             "bullet": "round",
             "bulletBorderAlpha": 1,
             "bulletColor": "#FFFFFF",
             "hideBulletsCount": 50,
-            "title": "rps line",
-            "valueField": "rps",
+            "title": "requests line",
+            "valueField": "requests",
             "useLineColorForBulletBorder": true,
-            "balloon":{
-                "drop":true
-            }
         },
         {
-            "id": "g5",
-            "balloonText": "success per second [[value]]",
+            "id": "g2",
+            "balloonText": "success: [[value]]rps",
             "bullet": "round",
             "bulletBorderAlpha": 1,
             "bulletColor": "#FFFFFF",
@@ -176,10 +173,6 @@ var latencyChart = new Chart(latencyCtx, {
             "title": "success line",
             "valueField": "success",
             "useLineColorForBulletBorder": true,
-            "connect": false,
-            "balloon":{
-                "drop":true
-            }
         }
         ],
         "chartScrollbar": {

@@ -524,7 +524,6 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     return;
 
   error:
-    printf("error number:%d\n", errno);
     thread->errors.write++;
     reconnect_socket(thread, c);
 }
@@ -793,7 +792,7 @@ static void print_stats_requests(stats *stats) {
         if (requests_num == cfg.interval) {
             time_t time = start_thread_time/1000/1000 + i;
             strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
-            aprintf(&rps_data, "\n{\"date\":\"%s\", \"rps\":%Lf, \"success\":%Lf},", 
+            aprintf(&rps_data, "\n{\"date\":\"%s\", \"requests\":%Lf, \"success\":%Lf},", 
                     timeArray, (long double)requests/cfg.interval, (long double)success/cfg.interval);
             success = 0;
             requests = 0;
