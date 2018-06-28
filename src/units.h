@@ -5,6 +5,7 @@ char *format_binary(long double);
 char *format_metric(long double);
 char *format_time_us(long double);
 char *format_time_s(long double);
+void format_time_str(char **time);
 
 int scan_metric(char *, uint64_t *);
 int scan_time(char *, uint64_t *);

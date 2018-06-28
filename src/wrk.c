@@ -710,13 +710,13 @@ static void record_html_log(char *key, char *value) {
 
 static void print_stats_error_code(errors *errors) {
     char buff[1024];
-    int offset = 0;
     if (errors->status == 0) {
-        record_html_log("${error_codes}", NULL);
-        return ;
+        snprintf(buff, sizeof(buff), "Error code :none\n");
+        goto END;
     }
 
-    snprintf(buff, sizeof(buff), "error code :\n");
+    int offset = 0;
+    snprintf(buff, sizeof(buff), "Error code :\n");
     int count = sizeof(errors->code)/sizeof(errors->code[0]);
     for (int i = 0; i < count; i++) {
         if (errors->code[i] != 0) {
@@ -724,6 +724,8 @@ static void print_stats_error_code(errors *errors) {
             snprintf(buff + offset, sizeof(buff), "  %u:%u\n", i, errors->code[i]);
         }
     }
+
+END:
     record_html_log("${error_codes}", buff);
 }
 
@@ -865,15 +867,19 @@ static void print_test_parameter(const char *url) {
 
     char buff[1024];
     char *time = format_time_s(cfg.duration);
-    snprintf(buff, sizeof(buff), "Running %s test @ %s\n%"PRIu64" concurrency",
-            time, url, cfg.connections);
+    format_time_str(&time);
+    snprintf(buff, sizeof(buff), "run at %s\n%s %"PRIu64" concurrency", url, time,  cfg.connections);
     record_html_log("${test_content}", buff);
+    free(time);
 }
 
 static void print_test_result(struct resultForm *o, errors *errors) {
     char buff[1024];
     int offset = 0;
-    snprintf(buff, sizeof(buff), "%"PRIu64" requests in %s, %sB read\n", o->complete, o->time, o->bytes);
+    char *time = strdup(o->time);
+    format_time_str(&time);
+    snprintf(buff, sizeof(buff), "%"PRIu64" requests sent in %s, %sB recieved\n", o->complete, time, o->bytes);
+    free(time);
     if (errors->connect || errors->read || errors->write) {
         offset = strlen(buff);
         snprintf(buff + offset, sizeof(buff), "Socket errors: connect %d, read %d, write %d\n",
@@ -886,14 +892,14 @@ static void print_result_details(struct resultForm *o, errors *errors) {
     char buff[1024];
     int offset = 0;
 
-    snprintf(buff, sizeof(buff), "Complete responses: %lu\n", o->complete);
+    snprintf(buff, sizeof(buff), "Completed Requests: %lu\n", o->complete);
     offset = strlen(buff);
     snprintf(buff + offset, sizeof(buff), "Non-2xx or 3xx responses: %d\n", errors->status);
 
     offset = strlen(buff);
-    snprintf(buff + offset, sizeof(buff), "Requests/sec: %10s\n", o->req_per_s);
+    snprintf(buff + offset, sizeof(buff), "Average RPS: %10s requests/s\n", o->req_per_s);
     offset = strlen(buff);
-    snprintf(buff + offset, sizeof(buff), "Transfer/sec: %10sB\n", o->bytes_per_s);
+    snprintf(buff + offset, sizeof(buff), "Average Transfer Rate: %10sB/s\n", o->bytes_per_s);
     record_html_log("${result_details}", buff);
 }
 

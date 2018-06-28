@@ -16,10 +16,10 @@
                 <article id="content" class="markdown-body">
                     <div class="document">
                         <div class="section" id="test-case">
-                            <h1>STRESS TEST REPORT</h1>
+                            <h1>LOAD TEST REPORT</h1>
                             <div class="section" id="test-parameter">
                                 <h2>TEST PARAMETER:</h2>
-                                <pre class="codehilite"><a href="${json_file}">${json_file}</a></pre>
+                                <pre class="codehilite">Test case file:<a href="${json_file}">${json_file}</a></pre>
                                 <pre class="codehilite">${test_content}</pre>
                             </div>
                             <div class="section" id="test-result">
@@ -31,7 +31,7 @@
                                 <pre class="codehilite">${requests_frequency}
                                 <div id="rps_chart"></div>
                                 </pre>
-                                <pre class="codehilite">Latency chat
+                                <pre class="codehilite">Latency Chat
                                     <canvas id="latencyChart" width="400" height="400"></canvas>
                                     <script>var latencyCtx = document.getElementById("latencyChart").getContext('2d');</script>
                                 </pre>
@@ -68,7 +68,7 @@
                                             <th class="head">+/-stdev</th>
                                         </tr>
                                     </thead>
-                                    <tbody valign="top">
+                                    <tbody valign="top" style="font-size:80%">
                                         <tr><td>${concurrency}</td>
                                             <td>${duration}</td>
                                             <td>${tps}</td>
@@ -109,7 +109,7 @@ var latencyChart = new Chart(latencyCtx, {
         ${latency_chat_label},
         datasets: [
         {
-            label: 'requests number',
+            label: 'Number of Requests',
             ${latency_chat_data},
             borderWidth: 1,
             type: "bar",
@@ -122,13 +122,13 @@ var latencyChart = new Chart(latencyCtx, {
             yAxes: [{
                 scaleLabel: {
                     display: true,
-                    labelString: 'requests num'
+                    labelString: 'Number of Requests'
                 }
             }],
             xAxes: [{
                 scaleLabel: {
                     display: true,
-                    labelString: 'time'
+                    labelString: 'Response Time'
                 }
             }]
         }

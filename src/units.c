@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <strings.h>
+#include <string.h>
 #include <inttypes.h>
 
 #include "units.h"
@@ -95,6 +96,21 @@ char *format_time_s(long double n) {
     return format_units(n, &time_units_s, 0);
 }
 
+void format_time_str(char **time) {
+    if (*time == NULL)
+        return ;
+
+    int offset = strlen(*time) - 1;
+    char *timeUnit;
+    switch((*time)[offset]){
+        case 's': timeUnit = "seconds"; break;
+        case 'm': timeUnit = "minutes"; break;
+        case 'h': timeUnit = "hours"; break;
+    }
+    (*time)[offset] = 0;
+    aprintf(time, " %s", timeUnit);
+}
+
 int scan_metric(char *s, uint64_t *n) {
     return scan_units(s, n, &metric_units);
 }
@@ -102,3 +118,4 @@ int scan_metric(char *s, uint64_t *n) {
 int scan_time(char *s, uint64_t *n) {
     return scan_units(s, n, &time_units_s);
 }
+
