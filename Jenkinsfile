@@ -19,7 +19,7 @@ pipeline {
             name : 'duration')
 
         choice (
-            choices: "data/grid.json\ndata/poi.json\ndata/route/route0_3km.json\ndata/route/route100_500km.json\ndata/route/route10_50km.json\ndata/route/route1k_2kkm.json\ndata/route/route2kkm.json\ndata/route/route3_10km.json\ndata/route/route500_1kkm.json\ndata/route/route50_100km.json\ndata/ti_enroute_v1.json\ndata/ti_enroute_v2.json",
+            choices: "data/grid.json\ndata/poi.json\ndata/route/route0_3km.json\ndata/route/route100_500km.json\ndata/route/route10_50km.json\ndata/route/route1k_2kkm.json\ndata/route/route2kkm.json\ndata/route/route3_10km.json\ndata/route/route500_1kkm.json\ndata/route/route50_100km.json\ndata/ti_enroute_v1.json\ndata/ti_enroute_v2.json\ndata/ntd.json",
             description: 'Load json data for script',
             name : 'json_file')
     }

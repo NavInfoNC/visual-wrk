@@ -777,7 +777,7 @@ static void print_stats_latency_map(stats *stats) {
 
 static void print_stats_requests(stats *stats) {
     char buff[1024];
-    snprintf(buff, sizeof(buff), "Frequency of requests Per %lus\n", cfg.interval);
+    snprintf(buff, sizeof(buff), "requests / %lu seconds\n", cfg.interval);
 
     uint64_t requests = 0;
     uint64_t success = 0;
