@@ -498,8 +498,6 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     if (!c->written) {
         if (cfg.dynamic) {
             script_request(thread->L, &c->request, &c->length);
-            //printf("buf:%s\n", c->request);
-            //printf("offset:%s\n", c->request+c->length);
         }
         c->start   = time_us();
         c->pending = cfg.pipeline;
@@ -538,7 +536,6 @@ static void socket_readable(aeEventLoop *loop, int fd, void *data, int mask) {
             case ERROR: goto error;
             case RETRY: return;
         }
-        printf("read:%s\n", c->buf);
 
         if (http_parser_execute(&c->parser, &parser_settings, c->buf, n) != n) goto error;
         if (n == 0 && !http_body_is_final(&c->parser)) goto error;
