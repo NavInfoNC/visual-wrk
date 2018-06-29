@@ -22,7 +22,6 @@ static struct config {
     char    *host;
     char    *script;
     char    *json_file;
-    char    *log_file;
     SSL_CTX *ctx;
 } cfg;
 
@@ -132,7 +131,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    g_html = fopen(cfg.log_file, "w");
+    system("cp template/* report -rf");
+    g_html = fopen("report/log.html", "w");
     if (g_html == NULL) {
         g_html = stderr;
         fprintf(stderr, "get last error:%d\n", errno);
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
-    g_html_template = get_template("template/template1.html");
+    g_html_template = get_template("report/template.html");
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
@@ -573,7 +573,6 @@ static struct option longopts[] = {
     { "connections", required_argument, NULL, 'c' },
     { "duration",    required_argument, NULL, 'd' },
     { "json",        required_argument, NULL, 'j' },
-    { "log",         required_argument, NULL, 'l' },
     { "script",      required_argument, NULL, 's' },
     { "header",      required_argument, NULL, 'H' },
     { "latency",     no_argument,       NULL, 'L' },
@@ -613,9 +612,6 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
                 break;
             case 'H':
                 *header++ = optarg;
-                break;
-            case 'l':
-                cfg->log_file = optarg;
                 break;
             case 'L':
                 cfg->latency = true;
@@ -711,12 +707,12 @@ static void record_html_log(char *key, char *value) {
 static void print_stats_error_code(errors *errors) {
     char buff[1024];
     if (errors->status == 0) {
-        snprintf(buff, sizeof(buff), "Error code :none\n");
+        snprintf(buff, sizeof(buff), "Error code: none\n");
         goto END;
     }
 
     int offset = 0;
-    snprintf(buff, sizeof(buff), "Error code :\n");
+    snprintf(buff, sizeof(buff), "Error code: \n");
     int count = sizeof(errors->code)/sizeof(errors->code[0]);
     for (int i = 0; i < count; i++) {
         if (errors->code[i] != 0) {
@@ -897,9 +893,9 @@ static void print_result_details(struct resultForm *o, errors *errors) {
     snprintf(buff + offset, sizeof(buff), "Non-2xx or 3xx responses: %d\n", errors->status);
 
     offset = strlen(buff);
-    snprintf(buff + offset, sizeof(buff), "Average RPS: %10s requests/s\n", o->req_per_s);
+    snprintf(buff + offset, sizeof(buff), "Average RPS: %s requests/s\n", o->req_per_s);
     offset = strlen(buff);
-    snprintf(buff + offset, sizeof(buff), "Average Transfer Rate: %10sB/s\n", o->bytes_per_s);
+    snprintf(buff + offset, sizeof(buff), "Average Transfer Rate: %sB/s\n", o->bytes_per_s);
     record_html_log("${result_details}", buff);
 }
 

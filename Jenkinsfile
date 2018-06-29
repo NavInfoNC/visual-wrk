@@ -19,7 +19,7 @@ pipeline {
             name : 'duration')
 
         string (
-            defaultValue: '2',
+            defaultValue: '1',
             description: 'RPS Chart sample interval',
             name : 'sample_interval')
 

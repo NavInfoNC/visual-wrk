@@ -1,10 +1,10 @@
 -- Module instantiation
-package.cpath=package.cpath .. ';lib/?.so'
+package.cpath=package.cpath .. ';/usr/local/lib/visual_wrk/?.so'
+package.path=package.path .. ';/usr/local/lib/visual_wrk/?.lua'
 
 local cjson = require "cjson"
 local cjson2 = cjson.new()
 local cjson_safe = require "cjson.safe"
-package.path=package.path .. ';lib/?.lua'
 local mime = require "mime"
 -- Initialize the pseudo random number generator
 -- Resource: http://lua-users.org/wiki/MathLibraryTutorial

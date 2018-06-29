@@ -19,7 +19,7 @@ endif
 
 SRC  := wrk.c net.c ssl.c aprintf.c stats.c script.c units.c \
 		ae.c zmalloc.c http_parser.c
-BIN  := wrk
+BIN  := visual-wrk
 VER  ?= $(shell git describe --tags --always --dirty)
 
 ODIR := obj
@@ -45,10 +45,23 @@ else
 	DEPS += $(ODIR)/lib/libssl.a
 endif
 
+ifeq ($(PREFIX),)
+	INSTALL_PREFIX = /usr/local
+endif
+
 all: $(BIN)
 
 clean:
 	$(RM) -rf $(BIN) obj/*
+
+install: ${BIN}
+	install -d ${INSTALL_PREFIX}/bin
+	install -m 755 ${BIN} ${INSTALL_PREFIX}/bin/
+	install -d ${INSTALL_PREFIX}/lib/visual_wrk/
+	install -m 755 lib/* ${INSTALL_PREFIX}/lib/visual_wrk/
+
+uninstall:
+	rm ${INSTALL_PREFIX}/bin/${BIN} ${INSTALL_PREFIX}/lib/visual_wrk/ -rf
 
 $(BIN): $(OBJ)
 	@echo LINK $(BIN)
@@ -111,3 +124,5 @@ endif
 vpath %.c   src
 vpath %.h   src
 vpath %.lua scripts
+
+
