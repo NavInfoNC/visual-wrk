@@ -133,6 +133,9 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
+        exit(1);
+
     system("cp template/* report -rf");
     g_html = fopen("report/log.html", "w");
     if (g_html == NULL) {
@@ -635,6 +638,9 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
     }
 
     if (!cfg->threads || !cfg->duration) return -1;
+
+    if (cfg->script == NULL)
+        cfg->script = "/usr/local/lib/visual_wrk/multi_requests.lua";
 
     if (!cfg->connections || cfg->connections < cfg->threads) {
         fprintf(stderr, "number of connections must be >= threads\n");
