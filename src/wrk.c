@@ -80,7 +80,6 @@ static void usage() {
            "    -j, --json        <S>  Load json data for script  \n"
            "    -H, --header      <H>  Add header to request      \n"
            "        --latency          Print latency statistics   \n"
-           "    -l  --log              Output report in rst format\n"
            "    -v, --version          Print version details      \n"
            "                                                      \n"
            "  Numeric arguments may include a SI unit (1k, 1M, 1G)\n"
