@@ -100,6 +100,8 @@ static char *get_template(char *template_name) {
     fread(template, s.st_size, sizeof(char), fp);
     fclose(fp);
 
+    template[s.st_size * sizeof(char)] = 0;
+
     return template;
 }
 
