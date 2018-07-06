@@ -113,7 +113,6 @@ request = function(label)
 
   -- Get the next requests array element
   local request_object = g_mixed_test[label][g_mixed_counter[label]]
-  print(request_object.method, request_object.path, request_object.headers, request_object.body)
 
   -- Increment the counter
   g_mixed_counter[label] = g_mixed_counter[label] + 1

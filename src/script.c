@@ -132,13 +132,13 @@ static int script_label_concurrency(lua_State *L, const char *label) {
    return concurrency;
 }
 
-mixed_case* script_mixed_case(lua_State *L, uint64_t *cases_num, uint64_t *cases_concurrency)
+cases_data* script_cases_data(lua_State *L, uint64_t *cases_num, uint64_t *cases_concurrency)
 {
     int mixed_num = script_get_mixed_file_num(L);
     if (mixed_num == 0)
         return NULL;
 
-    mixed_case *cases = (mixed_case *)malloc(sizeof(mixed_case) * mixed_num);
+    cases_data *cases = (cases_data *)malloc(sizeof(cases_data) * mixed_num);
 
     const char *str = NULL;
     int count = 0;

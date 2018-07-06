@@ -36,6 +36,6 @@ void buffer_append(buffer *, const char *, size_t);
 void buffer_reset(buffer *);
 char *buffer_pushlstring(lua_State *, char *);
 
-mixed_case *script_mixed_case(lua_State *, uint64_t *, uint64_t *);
+cases_data *script_cases_data(lua_State *, uint64_t *, uint64_t *);
 
 #endif /* SCRIPT_H */

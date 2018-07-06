@@ -30,6 +30,17 @@ static struct {
     stats *requests;
 } statistics;
 
+static struct mixedCases{
+    uint64_t concurrency;
+
+    int cases_per_thread;
+    int remaining_num;
+    int assigned_num;
+    bool valid;
+
+    cases_data *data;
+} mixed_cases;
+
 static struct resultForm {
     uint64_t complete;
     char *connections;
@@ -113,6 +124,35 @@ static void decide_thread_num(struct config *cfg) {
     }
 }
 
+static bool init_mixed_cases(lua_State *L, struct mixedCases *cases) {
+    uint64_t cases_num = 0;
+
+    cases->data = script_cases_data(L, &cases_num, &cases->concurrency);
+    if (cases->data != NULL && cases->concurrency != cfg.connections) {
+        fprintf(stderr, "Parametric concurrency(%lu) does not match the concurrency(%lu) in the %s\n", 
+                cfg.connections, cases->concurrency, cfg.json_file);
+        return false;
+    }
+
+    cases->cases_per_thread = cases_num / cfg.threads;
+    cases->remaining_num = cases_num % cfg.threads;
+    cases->assigned_num = 0;
+    cases->valid = cases->data == NULL ? false : true;
+
+    return true;
+}
+
+static void assign_cases_to_thread(thread *t, struct mixedCases *cases) {
+    t->cases = &cases->data[cases->assigned_num];
+    t->cases_num = cases->cases_per_thread;
+    if (cases->remaining_num != 0) {
+        t->cases_num++;
+        cases->remaining_num--;
+    }
+
+    cases->assigned_num += t->cases_num;
+}
+
 int main(int argc, char **argv) {
     thread_concurrency = false;
     char url[MAX_URL_LENGTH] = {0};
@@ -132,15 +172,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    uint64_t cases_num = 0;
-    uint64_t cases_concurrency = 0;
-    mixed_case *cases = script_mixed_case(L, &cases_num, &cases_concurrency);
-    if (cases != NULL && cases_concurrency != cfg.connections) {
-        fprintf(stderr, "Parametric concurrency(%lu) does not match the concurrency(%lu) in the %s\n", 
-                cfg.connections, cases_concurrency, cfg.json_file);
-        exit(1);
-    }
-
     if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
         exit(1);
 
@@ -150,6 +181,9 @@ int main(int argc, char **argv) {
         g_html = stderr;
         fprintf(stderr, "get last error:%d\n", errno);
     }
+
+    if (!init_mixed_cases(L, &mixed_cases))
+        exit(1);
 
     char *schema  = copy_url_part(url, &parts, UF_SCHEMA);
     char *host    = copy_url_part(url, &parts, UF_HOST);
@@ -184,10 +218,6 @@ int main(int argc, char **argv) {
     statistics.requests = stats_alloc(MAX_THREAD_RATE_S);
     thread *threads     = zcalloc(cfg.threads * sizeof(thread));
 
-    int cases_per_thread = cases_num / cfg.threads;
-    int remaining_cases_num = cases_num % cfg.threads;
-    int assigned_cases_num = 0;
-
     for (uint64_t i = 0; i < cfg.threads; i++) {
         thread *t      = &threads[i];
         t->loop        = aeCreateEventLoop(10 + cfg.connections * 3);
@@ -195,15 +225,8 @@ int main(int argc, char **argv) {
         memset(t->errors.code, 0, sizeof(t->errors.code));
 
         char *label = "default";
-        if (cases != NULL) {
-            t->cases = &cases[assigned_cases_num];
-            t->cases_num = cases_per_thread;
-            if (remaining_cases_num != 0) {
-                t->cases_num++;
-                remaining_cases_num--;
-            }
-
-            assigned_cases_num += t->cases_num;
+        if (mixed_cases.valid) {
+            assign_cases_to_thread(t, &mixed_cases);
             label = t->cases[0].label;
         }
 
@@ -224,7 +247,7 @@ int main(int argc, char **argv) {
         if (!t->loop || pthread_create(&t->thread, NULL, &thread_main, t)) {
             char *msg = strerror(errno);
             fprintf(stderr, "unable to create thread %"PRIu64": %s\n", i, msg);
-            free(cases);
+            free(mixed_cases.data);
             exit(2);
         }
     }
@@ -240,7 +263,7 @@ int main(int argc, char **argv) {
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
-        free(cases);
+        free(mixed_cases.data);
         exit(1);
     }
 
@@ -274,7 +297,7 @@ int main(int argc, char **argv) {
                 errors.code[j] += t->errors.code[j];
         }
     }
-    free(cases);
+    free(mixed_cases.data);
 
     uint64_t runtime_us = time_us() - start_thread_time;
     long double runtime_s   = runtime_us / 1000000.0;
