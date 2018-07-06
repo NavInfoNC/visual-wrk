@@ -132,6 +132,15 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    uint64_t cases_num = 0;
+    uint64_t cases_concurrency = 0;
+    mixed_case *cases = script_mixed_case(L, &cases_num, &cases_concurrency);
+    if (cases != NULL && cases_concurrency != cfg.connections) {
+        fprintf(stderr, "Parametric concurrency(%lu) does not match the concurrency(%lu) in the %s\n", 
+                cfg.connections, cases_concurrency, cfg.json_file);
+        exit(1);
+    }
+
     if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
         exit(1);
 
@@ -175,17 +184,34 @@ int main(int argc, char **argv) {
     statistics.requests = stats_alloc(MAX_THREAD_RATE_S);
     thread *threads     = zcalloc(cfg.threads * sizeof(thread));
 
+    int cases_per_thread = cases_num / cfg.threads;
+    int remaining_cases_num = cases_num % cfg.threads;
+    int assigned_cases_num = 0;
+
     for (uint64_t i = 0; i < cfg.threads; i++) {
         thread *t      = &threads[i];
         t->loop        = aeCreateEventLoop(10 + cfg.connections * 3);
         t->connections = cfg.connections / cfg.threads;
         memset(t->errors.code, 0, sizeof(t->errors.code));
 
+        char *label = "default";
+        if (cases != NULL) {
+            t->cases = &cases[assigned_cases_num];
+            t->cases_num = cases_per_thread;
+            if (remaining_cases_num != 0) {
+                t->cases_num++;
+                remaining_cases_num--;
+            }
+
+            assigned_cases_num += t->cases_num;
+            label = t->cases[0].label;
+        }
+
         t->L = script_create(cfg.script, cfg.json_file, url, headers);
         script_init(L, t, argc - optind, &argv[optind]);
 
         if (i == 0) {
-            cfg.pipeline = script_verify_request(t->L);
+            cfg.pipeline = script_verify_request(t->L, label);
             cfg.dynamic  = !script_is_static(t->L);
             cfg.delay    = script_has_delay(t->L);
             if (script_want_response(t->L)) {
@@ -198,6 +224,7 @@ int main(int argc, char **argv) {
         if (!t->loop || pthread_create(&t->thread, NULL, &thread_main, t)) {
             char *msg = strerror(errno);
             fprintf(stderr, "unable to create thread %"PRIu64": %s\n", i, msg);
+            free(cases);
             exit(2);
         }
     }
@@ -213,6 +240,7 @@ int main(int argc, char **argv) {
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
+        free(cases);
         exit(1);
     }
 
@@ -246,6 +274,7 @@ int main(int argc, char **argv) {
                 errors.code[j] += t->errors.code[j];
         }
     }
+    free(cases);
 
     uint64_t runtime_us = time_us() - start_thread_time;
     long double runtime_s   = runtime_us / 1000000.0;
@@ -290,6 +319,16 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+static char *get_label_from_thread_cases(thread *thread, int i) {
+    int concurrency = 0;
+    for (int offset = 0; offset < thread->cases_num; offset++) {
+        concurrency += thread->cases[offset].concurrency;
+        if (i < concurrency)
+            return thread->cases[offset].label;
+    }
+    return "default";
+}
+
 void *thread_main(void *arg) {
     thread *thread = arg;
 
@@ -297,18 +336,18 @@ void *thread_main(void *arg) {
     size_t length = 0;
 
     if (!cfg.dynamic) {
-        script_request(thread->L, &request, &length);
+        script_request(thread->L, "default", &request, &length);
     }
 
     thread->cs = zcalloc(thread->connections * sizeof(connection));
     connection *c = thread->cs;
-
     for (uint64_t i = 0; i < thread->connections; i++, c++) {
         c->thread = thread;
         c->ssl     = cfg.ctx ? SSL_new(cfg.ctx) : NULL;
         c->request = request;
         c->length  = length;
         c->delayed = cfg.delay;
+        c->case_label  = get_label_from_thread_cases(thread, i);
         connect_socket(thread, c);
     }
 
@@ -501,7 +540,7 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
 
     if (!c->written) {
         if (cfg.dynamic) {
-            script_request(thread->L, &c->request, &c->length);
+            script_request(thread->L, c->case_label, &c->request, &c->length);
         }
         c->start   = time_us();
         c->pending = cfg.pipeline;
@@ -746,6 +785,9 @@ uint64_t digit_ceil(uint64_t x) {
 static void print_stats_latency_map(stats *stats) {
     uint64_t max = digit_ceil(stats->max);
     uint64_t interval = max/20;
+    if (interval == 0)
+        return ;
+
     int latency_array[21];
     memset(latency_array, 0, sizeof(latency_array));
     char *x_coordinate = NULL;

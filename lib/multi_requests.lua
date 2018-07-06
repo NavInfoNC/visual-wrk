@@ -29,6 +29,10 @@ function decode_json_from_file(file)
   local data = {}
   local content
 
+  if file == nil then
+    return lines;
+  end
+
   -- Check if the file exists
   -- Resource: http://stackoverflow.com/a/4991602/325852
   local f=io.open(file,"r")
@@ -46,45 +50,77 @@ function decode_json_from_file(file)
   return data
 end
 
-json_data = decode_json_from_file(c_default_name)
+g_json_data = decode_json_from_file(c_json_file)
 
+g_mixed_label = {}
+g_mixed_concurrency = {}
+g_mixed_counter = {}
+g_mixed_file_num = 0
 -- Load URL paths from the file
 function load_request_objects_from_data()
-  if next(json_data) == nil then
+  if g_json_data == nil or next(g_json_data) == nil then
     return lines
   end
 
-  return shuffle(json_data["request"])
+  local mixed_requests = {}
+  if g_json_data["mixed_test"] ~=nil then
+    local mixed_test_json = g_json_data["mixed_test"]
+    g_mixed_file_num = #mixed_test_json
+    g_url = g_json_data["url"]
+
+    for i = 1, g_mixed_file_num do
+      local single_test_json = mixed_test_json[i]
+      g_mixed_label[i] = single_test_json["label"]
+      json_tmp = decode_json_from_file(single_test_json["file"])
+      if json_tmp == nil then
+        os.exit()
+      end
+
+      local requests = shuffle(json_tmp["request"])
+      if requests == nill then
+        os.exit()
+      end
+
+      mixed_requests[g_mixed_label[i]] = requests
+      g_mixed_counter[g_mixed_label[i]] = 1;
+      g_mixed_concurrency[g_mixed_label[i]] = single_test_json["weight"]
+    end
+  else
+    if next(g_json_data["request"]) == nil then
+      return lines
+    end
+    mixed_requests["default"] = shuffle(g_json_data["request"])
+    g_mixed_counter["default"] = 1;
+    g_url = g_json_data["url"]
+  end
+
+  return mixed_requests
 end
 
 -- Load URL requests from file
-requests = load_request_objects_from_data(c_default_name)
+g_mixed_test = load_request_objects_from_data()
 
--- Check if at least one path was found in the file
-if #requests <= 0 then
-  print("multiplerequests: No requests found.")
-  os.exit()
-end
-
--- print("multiplerequests: Found " .. #requests .. " requests")
-
-url = function()
-  return json_data["url"]
+label_concurrency = function(label)
+  return g_mixed_concurrency[label]
 end
 
 -- Initialize the requests array iterator
-counter = 1
+request = function(label)
+  if label == nil then
+    print("argument is null")
+    os.exit()
+  end
 
-request = function()
   -- Get the next requests array element
-  local request_object = requests[counter]
+  local request_object = g_mixed_test[label][g_mixed_counter[label]]
+  print(request_object.method, request_object.path, request_object.headers, request_object.body)
 
   -- Increment the counter
-  counter = counter + 1
+  g_mixed_counter[label] = g_mixed_counter[label] + 1
 
   -- If the counter is longer than the requests array length then reset it
-  if counter > #requests then
-    counter = 1
+  if g_mixed_counter[label] > #g_mixed_test[label] then
+    g_mixed_counter[label] = 1
   end
 
   local body

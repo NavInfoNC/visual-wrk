@@ -1,0 +1,46 @@
+{
+    "url":"https://navicore.mapbar.com",
+    "mixed_test":
+    [
+        {
+            "label":"0-3",
+            "file": "data/route/route0_3km.json",
+            "weight": "10"
+        },
+        {
+            "label":"3-10",
+            "file": "data/route/route3_10km.json",
+            "weight": "16"
+        },
+        {
+            "label":"10-50",
+            "file": "data/route/route10_50km.json",
+            "weight": "12"
+        },
+        {
+            "label":"50-100",
+            "file": "data/route/route50_100km.json",
+            "weight": "10"
+        },
+        {
+            "label":"100-500",
+            "file": "data/route/route100_500km.json",
+            "weight": "6"
+        },
+        {
+            "label":"500-1k",
+            "file": "data/route/route500_1kkm.json",
+            "weight": "3"
+        },
+        {
+            "label":"1k-2k",
+            "file": "data/route/route1k_2kkm.json",
+            "weight": "2"
+        },
+        {
+            "label":"2k+",
+            "file": "data/route/route2kkm.json",
+            "weight": "1"
+        }
+    ]
+}
