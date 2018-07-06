@@ -677,7 +677,7 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
 
     if (!cfg->threads || !cfg->duration) return -1;
 
-    if (cfg->script == NULL)
+    if (cfg->script == NULL && cfg->json_file != NULL)
         cfg->script = "/usr/local/lib/visual_wrk/multi_requests.lua";
 
     if (!cfg->connections || cfg->connections < cfg->threads) {
