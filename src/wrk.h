@@ -26,11 +26,6 @@
 
 extern const char *VERSION;
 
-typedef struct cases_data {
-    char *label;
-    uint64_t concurrency;
-} cases_data;
-
 typedef struct {
     pthread_t thread;
     aeEventLoop *loop;
@@ -41,8 +36,6 @@ typedef struct {
     uint64_t succ;
     uint64_t bytes;
     uint64_t start;
-    uint64_t cases_num;
-    cases_data *cases;
     lua_State *L;
     errors errors;
     struct connection *cs;
@@ -56,7 +49,6 @@ typedef struct {
 
 typedef struct connection {
     thread *thread;
-    char *case_label;
     http_parser parser;
     enum {
         FIELD, VALUE

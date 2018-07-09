@@ -109,61 +109,6 @@ lua_State *script_create(char *file, char *json_file, char *url, char **headers)
     return L;
 }
 
-static int script_get_mixed_file_num(lua_State *L) {
-    lua_getglobal(L, "g_mixed_file_num");
-    int file_num = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    return file_num;
-}
-
-static int script_label_concurrency(lua_State *L, const char *label) {
-   int pop = 1;
-   lua_getglobal(L, "label_concurrency");
-   if (!lua_isfunction(L, -1)) {
-       lua_getglobal(L, "wrk");
-       lua_getfield(L, -1, "label_concurrency");
-       pop += 2;
-   }
-   lua_pushstring(L, label);
-   lua_call(L, 1, 1);
-   int concurrency = lua_tointeger(L, -1);
-   lua_pop(L, pop);
-   return concurrency;
-}
-
-cases_data* script_cases_data(lua_State *L, uint64_t *cases_num, uint64_t *cases_concurrency)
-{
-    int mixed_num = script_get_mixed_file_num(L);
-    if (mixed_num == 0)
-        return NULL;
-
-    cases_data *cases = (cases_data *)malloc(sizeof(cases_data) * mixed_num);
-
-    const char *str = NULL;
-    int count = 0;
-
-    lua_getglobal(L, "g_mixed_label");
-    int it = lua_gettop(L);
-    lua_pushnil(L);
-    while (lua_next(L, it))
-    {
-        size_t len = 0;
-        str = lua_tolstring(L, -1, &len);
-        cases[count].label = strdup(str);
-        cases[count].concurrency = script_label_concurrency(L, str);
-        *cases_concurrency += cases[count].concurrency;
-        count++;
-        lua_pop(L, 1);
-        if (mixed_num == count)
-            break;
-    }
-    lua_pop(L, 1);
-    *cases_num = count;
-
-    return cases;
-}
-
 bool script_resolve(lua_State *L, char *host, char *service) {
     lua_getglobal(L, "wrk");
 
@@ -222,7 +167,7 @@ void script_url(lua_State *L, char *buf, size_t *len) {
     lua_pop(L, 1);
 }
 
-void script_request(lua_State *L, char *label, char **buf, size_t *len) {
+void script_request(lua_State *L, char **buf, size_t *len) {
     int pop = 1;
     lua_getglobal(L, "request");
     if (!lua_isfunction(L, -1)) {
@@ -230,8 +175,7 @@ void script_request(lua_State *L, char *label, char **buf, size_t *len) {
         lua_getfield(L, -1, "request");
         pop += 2;
     }
-    lua_pushstring(L, label);
-    lua_call(L, 1, 1);
+    lua_call(L, 0, 1);
     const char *str = lua_tolstring(L, -1, len);
     *buf = realloc(*buf, *len);
     memcpy(*buf, str, *len);
@@ -339,7 +283,7 @@ static int verify_request(http_parser *parser) {
     return 0;
 }
 
-size_t script_verify_request(lua_State *L, char *label) {
+size_t script_verify_request(lua_State *L) {
     http_parser_settings settings = {
         .on_message_complete = verify_request
     };
@@ -347,7 +291,7 @@ size_t script_verify_request(lua_State *L, char *label) {
     char *request = NULL;
     size_t len, count = 0;
 
-    script_request(L, label, &request, &len);
+    script_request(L, &request, &len);
     http_parser_init(&parser, HTTP_REQUEST);
     parser.data = &count;
 

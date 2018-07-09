@@ -25,6 +25,23 @@ function shuffle(paths)
   return paths
 end
 
+function shuffle_labels_by_weight(label_table, weight_table) 
+  local offset = 0
+  local labels = {}
+
+  local n = #label_table
+  for i = 1, n do 
+    local label = label_table[i]
+    local weight = weight_table[label]
+    for j = 1, weight do
+      labels[j + offset] = label
+    end
+    offset = offset + weight
+  end
+
+  return shuffle(labels)
+end
+
 function decode_json_from_file(file)
   local data = {}
   local content
@@ -52,10 +69,6 @@ end
 
 g_json_data = decode_json_from_file(c_json_file)
 
-g_mixed_label = {}
-g_mixed_concurrency = {}
-g_mixed_counter = {}
-g_mixed_file_num = 0
 -- Load URL paths from the file
 function load_request_objects_from_data()
   if g_json_data == nil or next(g_json_data) == nil then
@@ -63,14 +76,18 @@ function load_request_objects_from_data()
   end
 
   local mixed_requests = {}
+  local mixed_counter = {}
+  local mixed_labels = {}
+
   if g_json_data["mixed_test"] ~=nil then
     local mixed_test_json = g_json_data["mixed_test"]
-    g_mixed_file_num = #mixed_test_json
-    g_url = g_json_data["url"]
+    local mixed_file_num = #mixed_test_json
 
-    for i = 1, g_mixed_file_num do
+    local mixed_label = {}
+    local mixed_weight = {}
+    for i = 1, mixed_file_num do
       local single_test_json = mixed_test_json[i]
-      g_mixed_label[i] = single_test_json["label"]
+      mixed_label[i] = single_test_json["label"]
       json_tmp = decode_json_from_file(single_test_json["file"])
       if json_tmp == nil then
         os.exit()
@@ -81,44 +98,48 @@ function load_request_objects_from_data()
         os.exit()
       end
 
-      mixed_requests[g_mixed_label[i]] = requests
-      g_mixed_counter[g_mixed_label[i]] = 1;
-      g_mixed_concurrency[g_mixed_label[i]] = single_test_json["weight"]
+      mixed_requests[mixed_label[i]] = requests
+      mixed_counter[mixed_label[i]] = 1;
+      mixed_weight[mixed_label[i]] = single_test_json["weight"]
     end
+    mixed_labels = shuffle_labels_by_weight(mixed_label, mixed_weight)
   else
     if next(g_json_data["request"]) == nil then
       return lines
     end
     mixed_requests["default"] = shuffle(g_json_data["request"])
-    g_mixed_counter["default"] = 1;
-    g_url = g_json_data["url"]
+    mixed_counter["default"] = 1;
   end
 
-  return mixed_requests
+  return mixed_requests, mixed_counter, mixed_labels, g_json_data["url"]
 end
 
 -- Load URL requests from file
-g_mixed_test = load_request_objects_from_data()
+g_mixed_requests, g_mixed_counter, g_mixed_labels, g_url = load_request_objects_from_data()
 
-label_concurrency = function(label)
-  return g_mixed_concurrency[label]
-end
+g_mixed_label_counter = 1
 
 -- Initialize the requests array iterator
-request = function(label)
-  if label == nil then
-    print("argument is null")
-    os.exit()
+request = function()
+  local label = g_mixed_labels[g_mixed_label_counter]
+
+  if label ~= nil then
+    g_mixed_label_counter = g_mixed_label_counter + 1
+    if g_mixed_label_counter > #g_mixed_labels then
+      g_mixed_label_counter = 1
+    end
+  else
+    label = "default"
   end
 
   -- Get the next requests array element
-  local request_object = g_mixed_test[label][g_mixed_counter[label]]
+  local request_object = g_mixed_requests[label][g_mixed_counter[label]]
 
   -- Increment the counter
   g_mixed_counter[label] = g_mixed_counter[label] + 1
 
   -- If the counter is longer than the requests array length then reset it
-  if g_mixed_counter[label] > #g_mixed_test[label] then
+  if g_mixed_counter[label] > #g_mixed_requests[label] then
     g_mixed_counter[label] = 1
   end
 
