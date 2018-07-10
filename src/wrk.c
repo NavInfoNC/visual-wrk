@@ -769,8 +769,8 @@ static void print_stats_latency_map(stats *stats) {
 
     aprintf(&x_coordinate, "]");
     aprintf(&y_coordinate, "]");
-    record_html_log("${latency_chat_label}", x_coordinate);
-    record_html_log("${latency_chat_data}", y_coordinate);
+    record_html_log("${latency_chart_label}", x_coordinate);
+    record_html_log("${latency_chart_data}", y_coordinate);
     free(x_coordinate);
     free(y_coordinate);
 }
@@ -796,7 +796,8 @@ static void statistics_rps(stats *stats) {
 
 static void print_stats_requests(stats *stats) {
     char buff[1024];
-    snprintf(buff, sizeof(buff), "requests / %lu seconds\n", cfg.interval);
+    char *units = cfg.interval == 1 ? "second" : "seconds";
+    snprintf(buff, sizeof(buff), "requests / %lu %s\n", cfg.interval, units);
 
     uint64_t requests = 0;
     uint64_t success = 0;
@@ -821,7 +822,7 @@ static void print_stats_requests(stats *stats) {
     }
 
     record_html_log("${requests_frequency}", buff);
-    record_html_log("${rps_chat_data}", rps_data);
+    record_html_log("${rps_chart_data}", rps_data);
     free(rps_data);
 }
 

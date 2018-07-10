@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <title>Rreport for Performance Test</title>
-        <script src="Chart.js"></script>
-        <link rel="stylesheet" type="text/css" href="github.css">
+        <script src="js/Chart.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/github.css">
         <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
         <script src="https://www.amcharts.com/lib/3/serial.js"></script>
         <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
@@ -31,7 +31,7 @@
                                 <pre class="codehilite">${requests_frequency}
                                 <div id="rps_chart"></div>
                                 </pre>
-                                <pre class="codehilite">Latency Chat
+                                <pre class="codehilite">Latency Chart
                                     <canvas id="latencyChart" width="400" height="225"></canvas>
                                     <script>var latencyCtx = document.getElementById("latencyChart").getContext('2d');</script>
                                 </pre>
@@ -106,11 +106,11 @@ window.App.Context = {
 var latencyChart = new Chart(latencyCtx, {
     type: 'bar',
     data: {
-        ${latency_chat_label},
+        ${latency_chart_label},
         datasets: [
         {
             label: 'Number of Requests',
-            ${latency_chat_data},
+            ${latency_chart_data},
             borderWidth: 1,
             type: "bar",
             borderColor: '#0000FF',
@@ -214,7 +214,7 @@ var latencyChart = new Chart(latencyCtx, {
     }
     // generate some random data, quite different range
     function generateChartData() {
-        var chartData = [${rps_chat_data}];
+        var chartData = [${rps_chart_data}];
         return chartData;
     }
     </script>
