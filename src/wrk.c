@@ -258,6 +258,7 @@ int main(int argc, char **argv) {
     result.req_per_s = format_metric(req_per_s);
     result.bytes_per_s = format_binary(bytes_per_s);
     result.connections = format_metric(cfg.connections);
+    statistics_rps(statistics.requests);
 
     print_test_result(&result, &errors);
     print_result_details(&result, &errors);
@@ -374,11 +375,6 @@ static int record_rate(aeEventLoop *loop, long long id, void *data) {
     }
 
     if (thread->requests > 0) {
-        uint64_t elapsed_ms = (time_us() - thread->start) / 1000;
-        uint64_t requests = (thread->requests / (double) elapsed_ms) * 1000;
-
-        stats_record(statistics.requests, requests);
-
         uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
         stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
 
@@ -777,6 +773,25 @@ static void print_stats_latency_map(stats *stats) {
     record_html_log("${latency_chat_data}", y_coordinate);
     free(x_coordinate);
     free(y_coordinate);
+}
+
+static void statistics_rps(stats *stats) {
+    uint64_t requests_num = 0;
+    uint64_t requests = 0;
+
+    for (uint64_t i = 0; i <= stats->max_location; i++) {
+        requests += stats->requests[i];
+        requests_num++;
+
+        if (requests_num == cfg.interval) {
+            stats_record(statistics.requests, (double)requests/cfg.interval);
+            requests = 0;
+            requests_num = 0;
+        }
+    }
+
+    if (requests_num != 0 && requests_num != cfg.interval)
+        stats_record(statistics.requests, (double)requests/requests_num);
 }
 
 static void print_stats_requests(stats *stats) {

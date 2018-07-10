@@ -33,7 +33,6 @@ int stats_record(stats *stats, uint64_t n) {
     uint64_t max = stats->max;
     while (n < min) min = __sync_val_compare_and_swap(&stats->min, min, n);
     while (n > max) max = __sync_val_compare_and_swap(&stats->max, max, n);
-    /* printf("stats->min:%lu, stats->max:%lu\n", stats->min, stats->max); */
     return 1;
 }
 
