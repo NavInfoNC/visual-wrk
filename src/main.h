@@ -69,4 +69,6 @@ typedef struct CollectConfig {
 	bool result;
 } CollectConfig;
 static void print_dstServerPerformance(CollectConfig *, json_t *);
+
+static void clear_unused_variable();
 #endif /* MAIN_H */

@@ -32,7 +32,7 @@
                                 <pre class="codehilite">${error_codes}</pre>
                                 <pre class="codehilite">${latency_distribution}</pre>
                                 <pre class="codehilite">${requests_frequency}
-                                <div id="rps_chart"></div>
+                                ${rps_chart_div}
                                 </pre>
                                 <pre class="codehilite">Latency Chart
                                     <canvas id="latencyChart" width="400" height="225"></canvas>
@@ -91,13 +91,9 @@
                             <div>
                                 <h2>SERVER PERFORMANCE:</h2>
                                 <pre class="codehilite">
-                                    <div id="cpu_chart"></div>
-                                </pre>
-                                <pre class="codehilite">
-                                    <div id="mem_chart"></div>
-                                </pre>
-                                <pre class="codehilite">
-                                    <div id="io_chart"></div>
+                                    ${cpu_chart_div}
+                                    ${mem_chart_div}
+                                    ${io_chart_div}
                                 </pre>
                             </div>
                         </div>

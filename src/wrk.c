@@ -301,6 +301,8 @@ int main(int argc, char **argv) {
         script_done(L, statistics.latency, statistics.requests);
     }
 
+
+	clear_unused_variable();
     fwrite(g_html_template, strlen(g_html_template), sizeof(char), g_html);
     fclose(g_html);
     free(g_html_template);
@@ -723,6 +725,28 @@ static void record_html_log(char *key, char *value) {
     g_html_template = p;
 }
 
+static bool get_unused_variable(char *variable) {
+	char *start = strstr(g_html_template, "${");
+	if (start == NULL)
+		return false;
+
+	char *end = strstr(start, "}");
+	if (end == NULL)
+		return false;
+
+	int variable_size = end - start + 1;
+	strncpy(variable, start, variable_size);
+	variable[variable_size] = 0;
+	return true;
+}
+
+static void clear_unused_variable() {
+	char unused_variable[256];
+	while(get_unused_variable(unused_variable)) {
+		record_html_log(unused_variable, " ");
+	}
+}
+
 static void print_stats_error_code(errors *errors) {
     char buff[1024];
     if (errors->status == 0) {
@@ -840,6 +864,7 @@ static void print_stats_requests(stats *stats) {
 
     record_html_log("${requests_frequency}", buff);
     record_html_log("${rps_chart_data}", rps_data);
+	record_html_log("${rps_chart_div}", "<div id=\"rps_chart\"></div>");
     free(rps_data);
 }
 
@@ -945,7 +970,6 @@ static void print_cpu_percent(json_t* json, uint64_t start_time) {
 	CpuPerformance cpuPerformance;
 	initCpuPerformance(&cpuPerformance);
 	if (!getCpuPerformance(json, &cpuPerformance)) {
-		record_html_log("${cpu_chart_data}", "[]");
 		releaseCpuPerformance(&cpuPerformance);
 		return;
 	}
@@ -969,6 +993,7 @@ static void print_cpu_percent(json_t* json, uint64_t start_time) {
         aprintf(&performance_data, format_string);
     }
 
+	record_html_log("${cpu_chart_div}", "<div id=\"cpu_chart\"></div>");
     record_html_log("${cpu_chart_data}", performance_data);
 	releaseCpuPerformance(&cpuPerformance);
 	return;
@@ -978,7 +1003,6 @@ static void print_mem_percent(json_t* json, uint64_t start_time) {
 	MemPerformance memPerformance;
 	initMemPerformance(&memPerformance);
 	if (!getMemPerformance(json, &memPerformance)) {
-		record_html_log("${mem_chart_data}", "[]");
 		releaseMemPerformance(&memPerformance);
 		return;
 	}
@@ -993,6 +1017,7 @@ static void print_mem_percent(json_t* json, uint64_t start_time) {
 				timeArray, memPerformance.percent.array[i]);
     }
 
+	record_html_log("${mem_chart_div}", "<div id=\"mem_chart\"></div>");
     record_html_log("${mem_chart_data}", performance_data);
 	releaseMemPerformance(&memPerformance);
 	return;
@@ -1002,7 +1027,6 @@ static void print_io_percent(json_t* json, uint64_t start_time) {
 	IoPerformance ioPerformance;
 	initIoPerformance(&ioPerformance);
 	if (!getIoPerformance(json, &ioPerformance)) {
-		record_html_log("${io_chart_data}", "[]");
 		releaseIoPerformance(&ioPerformance);
 		return;
 	}
@@ -1021,6 +1045,7 @@ static void print_io_percent(json_t* json, uint64_t start_time) {
 				timeArray, readSize, writeSize, readCount, writeCount);
     }
 
+	record_html_log("${io_chart_div}", "<div id=\"io_chart\"></div>");
     record_html_log("${io_chart_data}", performance_data);
 	releaseIoPerformance(&ioPerformance);
 }
