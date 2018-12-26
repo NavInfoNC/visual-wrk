@@ -18,16 +18,20 @@ else ifeq ($(TARGET), freebsd)
 endif
 
 SRC  := wrk.c net.c ssl.c aprintf.c stats.c script.c units.c \
-		ae.c zmalloc.c http_parser.c
+		ae.c zmalloc.c http_parser.c server_perf.c
 BIN  := visual-wrk
 VER  ?= $(shell git describe --tags --always --dirty)
 
 ODIR := obj
 OBJ  := $(patsubst %.c,$(ODIR)/%.o,$(SRC)) $(ODIR)/bytecode.o $(ODIR)/version.o
 LIBS := -lluajit-5.1 $(LIBS)
+LIBS := -ljansson_linux_x64 $(LIBS)
+LIBS := -lcurl $(LIBS)
 
 DEPS    :=
 CFLAGS  += -I$(ODIR)/include
+CFLAGS  += -I../navicore-lib/include
+LDFLAGS += -L../navicore-lib/lib/Debug
 LDFLAGS += -L$(ODIR)/lib
 
 ifneq ($(WITH_LUAJIT),)

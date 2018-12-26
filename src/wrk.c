@@ -2,6 +2,7 @@
 
 #include "wrk.h"
 #include "script.h"
+#include "server_perf.h"
 #include "main.h"
 
 #define MAX_URL_LENGTH 2048
@@ -155,6 +156,12 @@ int main(int argc, char **argv) {
 
     cfg.host = host;
 
+	CollectConfig collectCfg;
+	collectCfg.result  = startCollecting(cfg.host, cfg.duration, cfg.interval, NULL, collectCfg.hash_string);
+	if (!collectCfg.result)
+		fprintf(stderr, "start collecting failed");
+	collectCfg.start_time = time(NULL);
+
     if (!strncmp("https", schema, 5)) {
         if ((cfg.ctx = ssl_init()) == NULL) {
             fprintf(stderr, "unable to initialize SSL\n");
@@ -277,6 +284,16 @@ int main(int argc, char **argv) {
     print_stats_latency(statistics.latency);
     
     print_result_form();
+
+	if (collectCfg.result) {
+		json_t* responseJson = stopCollecting(cfg.host, collectCfg.hash_string);
+		if (responseJson != NULL)
+			print_dstServerPerformance(&collectCfg, responseJson);
+		else
+			printf("stopCollecting failed\n");
+
+		json_decref(responseJson);
+	}
 
     if (script_has_done(L)) {
         script_summary(L, runtime_us, complete, bytes);
@@ -923,4 +940,95 @@ static void print_result_details(struct resultForm *o, errors *errors) {
     snprintf(buff + offset, sizeof(buff), "Average Transfer Rate: %sB/s\n", o->bytes_per_s);
     record_html_log("${result_details}", buff);
 }
+
+static void print_cpu_percent(json_t* json, uint64_t start_time) {
+	CpuPerformance cpuPerformance;
+	initCpuPerformance(&cpuPerformance);
+	if (!getCpuPerformance(json, &cpuPerformance)) {
+		record_html_log("${cpu_chart_data}", "[]");
+		releaseCpuPerformance(&cpuPerformance);
+		return;
+	}
+
+    char *performance_data = NULL;
+    char timeArray[40];
+	int count = cpuPerformance.percent.count;
+    for (uint64_t i = 0; i < count; i++) {
+        time_t time = start_time + i * cfg.interval;
+        strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
+
+		char format_string[1024];
+		sprintf(format_string, "\n{\"date\":\"%s\", \"cpu\":%lf", timeArray, cpuPerformance.percent.array[i]);
+		for (int j = 0; j < cpuPerformance.coreNum; j++) {
+			int offset = strlen(format_string);
+			int index = i * cpuPerformance.coreNum + j;
+			sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpuPerformance.corePercent.array[index]);
+		}
+		strcat(format_string, "},");
+
+        aprintf(&performance_data, format_string);
+    }
+
+    record_html_log("${cpu_chart_data}", performance_data);
+	releaseCpuPerformance(&cpuPerformance);
+	return;
+}
+
+static void print_mem_percent(json_t* json, uint64_t start_time) {
+	MemPerformance memPerformance;
+	initMemPerformance(&memPerformance);
+	if (!getMemPerformance(json, &memPerformance)) {
+		record_html_log("${mem_chart_data}", "[]");
+		releaseMemPerformance(&memPerformance);
+		return;
+	}
+
+    char *performance_data = NULL;
+    char timeArray[40];
+	int count = memPerformance.percent.count;
+    for (uint64_t i = 0; i < count; i++) {
+        time_t time = start_time + i * cfg.interval;
+        strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
+        aprintf(&performance_data, "\n{\"date\":\"%s\", \"mem\":%lf},",
+				timeArray, memPerformance.percent.array[i]);
+    }
+
+    record_html_log("${mem_chart_data}", performance_data);
+	releaseMemPerformance(&memPerformance);
+	return;
+}
+
+static void print_io_percent(json_t* json, uint64_t start_time) {
+	IoPerformance ioPerformance;
+	initIoPerformance(&ioPerformance);
+	if (!getIoPerformance(json, &ioPerformance)) {
+		record_html_log("${io_chart_data}", "[]");
+		releaseIoPerformance(&ioPerformance);
+		return;
+	}
+
+    char *performance_data = NULL;
+    char timeArray[40];
+	int count = ioPerformance.readSize.count;
+    for (int i = 0; i < count - 1; i++) {
+        time_t time = start_time + i * cfg.interval;
+        strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
+		double readSize = i != 0 ? ioPerformance.readSize.array[i] - ioPerformance.readSize.array[i - 1] : 0;
+		double writeSize = i != 0 ? ioPerformance.writeSize.array[i] - ioPerformance.writeSize.array[i - 1] : 0;
+		int readCount = i != 0 ? ioPerformance.readCount.array[i] - ioPerformance.readCount.array[i - 1] : 0;
+		int writeCount = i != 0 ? ioPerformance.writeCount.array[i] - ioPerformance.writeCount.array[i - 1] : 0;
+		aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
+				timeArray, readSize, writeSize, readCount, writeCount);
+    }
+
+    record_html_log("${io_chart_data}", performance_data);
+	releaseIoPerformance(&ioPerformance);
+}
+
+static void print_dstServerPerformance(CollectConfig* collectCfg, json_t* bufferJson) {
+	print_cpu_percent(bufferJson, collectCfg->start_time);
+	print_mem_percent(bufferJson, collectCfg->start_time);
+	print_io_percent(bufferJson, collectCfg->start_time);
+}
+
 

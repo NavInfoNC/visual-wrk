@@ -24,6 +24,7 @@
 #include "stats.h"
 #include "units.h"
 #include "zmalloc.h"
+#include "jansson/jansson.h"
 
 struct config;
 struct resultForm;
@@ -61,4 +62,11 @@ static void print_test_parameter(const char*);
 
 static void print_test_result(struct resultForm *, errors *);
 static void print_result_details(struct resultForm *, errors *);
+
+typedef struct CollectConfig {
+	uint64_t start_time;
+	char hash_string[64];
+	bool result;
+} CollectConfig;
+static void print_dstServerPerformance(CollectConfig *, json_t *);
 #endif /* MAIN_H */

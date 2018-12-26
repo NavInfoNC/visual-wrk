@@ -9,6 +9,9 @@
         <script src="https://www.amcharts.com/lib/3/serial.js"></script>
         <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
         <style>#rps_chart {width: 100%; height : 500px;}</style>
+        <style>#cpu_chart {width: 100%; height : 500px;}</style>
+        <style>#mem_chart {width: 100%; height : 500px;}</style>
+        <style>#io_chart {width: 100%; height : 500px;}</style>
     </head>
     <body>
         <div class="container">
@@ -85,6 +88,18 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div>
+                                <h2>SERVER PERFORMANCE:</h2>
+                                <pre class="codehilite">
+                                    <div id="cpu_chart"></div>
+                                </pre>
+                                <pre class="codehilite">
+                                    <div id="mem_chart"></div>
+                                </pre>
+                                <pre class="codehilite">
+                                    <div id="io_chart"></div>
+                                </pre>
+                            </div>
                         </div>
                     </div>
                 </article>
@@ -93,14 +108,14 @@
     </body>
     <script type="text/x-omnimarkup-config">
 window.App.Context = {
-          buffer_id: 76,
-                timestamp: '1529398978.38716',
-                      revivable_key: 'QzpcVXNlcnNcemhhb2dxXERlc2t0b3BcbG9nLnJzdA=='
-                          };
-                              window.App.Options = {
-                                    ajax_polling_interval: 500,
-                                          mathjax_enabled: false
-                                              };
+        buffer_id: 76,
+        timestamp: '1529398978.38716',
+        revivable_key: 'QzpcVXNlcnNcemhhb2dxXERlc2t0b3BcbG9nLnJzdA=='
+    };
+    window.App.Options = {
+        ajax_polling_interval: 500,
+        mathjax_enabled: false
+    };
     </script>
     <script>
 var latencyChart = new Chart(latencyCtx, {
@@ -136,45 +151,70 @@ var latencyChart = new Chart(latencyCtx, {
 });
     </script>
     <script type="text/javascript">
-    var chartData = generateChartData();
-    var chart = AmCharts.makeChart("rps_chart", {
+function generateGraph(id, text, units) {
+    return {
+        "id": id,
+        "balloonText": text + ": [[value]]" + units,
+        "bullet": "round",
+        "bulletBorderAlpha": 1,
+        "bulletColor": "#FFFFFF",
+        "hideBulletsCount": 50,
+        "title": text  + " ",
+        "valueField": text,
+        "useLineColorForBulletBorder": true,
+    }
+}
+
+function makeChartStyle(dataProvider, chartType) {
+    var graphs
+    var unit = ""
+    if ("rps_chart" == chartType) {
+        unit = "rps"
+        graph1 = generateGraph("g1", "requests", unit)
+         graph2 = generateGraph("g2", "success", unit)
+         graphs = [graph1,graph2,]
+    } else if ("cpu_chart" == chartType) {
+        unit = "%"
+        graph0 = generateGraph("g1", "cpu", unit)
+        graph1 = generateGraph("g2", "cpu0", unit)
+        graph2 = generateGraph("g3", "cpu1", unit)
+        graph3 = generateGraph("g4", "cpu2", unit)
+        graph4 = generateGraph("g5", "cpu3", unit)
+        graphs = [graph0,graph1,graph2,graph3,graph4]
+    } else if ("mem_chart" == chartType) {
+        unit = "%"
+        graph1 = generateGraph("id", "mem", unit)
+        graphs = [graph1,]
+    } else if ("io_chart" == chartType) {
+        graph1 = generateGraph("g1", "readSize", "MB")
+        graph2 = generateGraph("g2", "writeSize", "MB")
+        graph3 = generateGraph("g3", "readCount", "")
+        graph4 = generateGraph("g4", "writeCount", "")
+        graphs = [graph1,graph2,graph3,graph4]
+    }
+    return {
         "type": "serial",
         "theme": "light",
         "marginRight": 80,
         "autoMarginOffset": 20,
         "marginTop": 7,
-        "dataProvider": chartData,
+        "legend": {
+            "align": "center",
+            "equalWidths": false,
+            "valueAlign": "left",
+            "valueWidth": 100,
+            "valueText": " "
+        },
+        "dataProvider": dataProvider,
         "valueAxes": [{
             "axisAlpha": 0.2,
             "dashLength": 1,
-            "position": "left"
+            "position": "left",
+            "unit": unit
         }],
         "mouseWheelZoomEnabled": true,
         "dataDateFormat": "YYYY-MM-DD HH:NN:SS",
-        "graphs": [
-        {
-            "id": "g1",
-            "balloonText": "requests: [[value]]rps",
-            "bullet": "round",
-            "bulletBorderAlpha": 1,
-            "bulletColor": "#FFFFFF",
-            "hideBulletsCount": 50,
-            "title": "requests line",
-            "valueField": "requests",
-            "useLineColorForBulletBorder": true,
-        },
-        {
-            "id": "g2",
-            "balloonText": "success: [[value]]rps",
-            "bullet": "round",
-            "bulletBorderAlpha": 1,
-            "bulletColor": "#FFFFFF",
-            "hideBulletsCount": 50,
-            "title": "success line",
-            "valueField": "success",
-            "useLineColorForBulletBorder": true,
-        }
-        ],
+        "graphs":graphs,
         "chartScrollbar": {
             "autoGridCount": true,
             "graph": "g1",
@@ -203,23 +243,27 @@ var latencyChart = new Chart(latencyCtx, {
         "export": {
             "enabled": true
         }
-    });
-    
+    };
+}
+function makeChart(chartData, chartType) {
+    var chartStyle = makeChartStyle(chartData, chartType);
+    var chart = AmCharts.makeChart(chartType, chartStyle);
     chart.addListener("rendered", zoomChart);
-    zoomChart();
-    
+
     // this method is called when chart is first inited as we listen for "rendered" event
     function zoomChart() {
         chart.zoomOut();
     }
-    // generate some random data, quite different range
-    function generateChartData() {
-        var chartData = [${rps_chart_data}];
-        return chartData;
-    }
+}
+
+var rpsChartData = [${rps_chart_data}];
+var cpuChartData = [${cpu_chart_data}];
+var memChartData = [${mem_chart_data}];
+var ioChartData = [${io_chart_data}];
+makeChart(rpsChartData, "rps_chart")
+makeChart(cpuChartData, "cpu_chart")
+makeChart(memChartData, "mem_chart")
+makeChart(ioChartData, "io_chart")
     </script>
-    <script type="text/javascript" src="/public/jquery-2.1.3.min.js"></script>
-    <script type="text/javascript" src="/public/imagesloaded.pkgd.min.js"></script>
-    <script type="text/javascript" src="/public/app.js"></script>
 </html>
 
