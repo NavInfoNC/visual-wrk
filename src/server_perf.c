@@ -10,7 +10,7 @@
 #define PERFORMANCE_START_COLLECTING "performance/start_collecting"
 #define PERFORMANCE_STOP_COLLECTING "performance/stop_collecting"
 
-#define URL_PREFFIX "system_monitor"
+#define URL_PREFFIX "system_monitor/api/v1"
 
 struct string
 {
@@ -82,7 +82,7 @@ bool startCollecting(const char* host, int duration, int interval, char* serverN
 		sprintf(hash + i*2, "%02x", hashDigest[i]);
 	}
 
-	char url[128];
+	char url[1024];
 	sprintf(url, "http://%s/%s/%s?hash=%s&duration=%d&interval=%d", host, URL_PREFFIX, PERFORMANCE_START_COLLECTING, hash, duration, interval);
 	if (serverName != NULL) {
 		strcat(url, "&server=");
