@@ -31,7 +31,7 @@ LIBS := -lcurl $(LIBS)
 DEPS    :=
 CFLAGS  += -I$(ODIR)/include
 CFLAGS  += -I../navicore-lib/include
-LDFLAGS += -L../navicore-lib/lib/Debug
+LDFLAGS += -L../navicore-lib/lib/Release
 LDFLAGS += -L$(ODIR)/lib
 
 ifneq ($(WITH_LUAJIT),)

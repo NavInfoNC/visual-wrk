@@ -742,6 +742,7 @@ static bool get_unused_variable(char *variable) {
 
 static void clear_unused_variable() {
 	char unused_variable[256];
+	record_html_log("${cpu_num}", "0");
 	while(get_unused_variable(unused_variable)) {
 		record_html_log(unused_variable, " ");
 	}
@@ -993,6 +994,9 @@ static void print_cpu_percent(json_t* json, uint64_t start_time) {
         aprintf(&performance_data, format_string);
     }
 
+	char cpu_num[4];
+	snprintf(cpu_num, sizeof(cpu_num), "%d", cpuPerformance.coreNum);
+	record_html_log("${cpu_num}", cpu_num);
 	record_html_log("${cpu_chart_div}", "<div id=\"cpu_chart\"></div>");
     record_html_log("${cpu_chart_data}", performance_data);
 	releaseCpuPerformance(&cpuPerformance);

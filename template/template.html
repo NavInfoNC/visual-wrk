@@ -162,31 +162,27 @@ function generateGraph(id, text, units) {
 }
 
 function makeChartStyle(dataProvider, chartType) {
-    var graphs
+    var graphs = []
     var unit = ""
     if ("rps_chart" == chartType) {
         unit = "rps"
-        graph1 = generateGraph("g1", "requests", unit)
-         graph2 = generateGraph("g2", "success", unit)
-         graphs = [graph1,graph2,]
+        graphs.push(generateGraph("g1", "requests", unit))
+        graphs.push(generateGraph("g2", "success", unit))
     } else if ("cpu_chart" == chartType) {
         unit = "%"
-        graph0 = generateGraph("g1", "cpu", unit)
-        graph1 = generateGraph("g2", "cpu0", unit)
-        graph2 = generateGraph("g3", "cpu1", unit)
-        graph3 = generateGraph("g4", "cpu2", unit)
-        graph4 = generateGraph("g5", "cpu3", unit)
-        graphs = [graph0,graph1,graph2,graph3,graph4]
+        graphs.push(generateGraph("g1", "cpu", unit))
+        for (var i = 0; i < ${cpu_num}; i++) {
+            var id = i + 1
+            graphs.push(generateGraph("g"+id, "cpu"+i, unit))
+        }
     } else if ("mem_chart" == chartType) {
         unit = "%"
-        graph1 = generateGraph("id", "mem", unit)
-        graphs = [graph1,]
+        graphs.push(generateGraph("id", "mem", unit))
     } else if ("io_chart" == chartType) {
-        graph1 = generateGraph("g1", "readSize", "MB")
-        graph2 = generateGraph("g2", "writeSize", "MB")
-        graph3 = generateGraph("g3", "readCount", "")
-        graph4 = generateGraph("g4", "writeCount", "")
-        graphs = [graph1,graph2,graph3,graph4]
+        graphs.push(generateGraph("g1", "readSize", "MB"))
+        graphs.push(generateGraph("g2", "writeSize", "MB"))
+        graphs.push(generateGraph("g3", "readCount", ""))
+        graphs.push(generateGraph("g4", "writeCount", ""))
     }
     return {
         "type": "serial",
