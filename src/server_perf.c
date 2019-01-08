@@ -104,7 +104,7 @@ bool startCollecting(const char* host, int duration, int interval, char* serverN
 	json_error_t error;
 	json_t* responseJson = json_loadb(buffer.ptr, buffer.len, JSON_ENCODE_ANY, &error);
 	const char* responseResult = json_string_value_of_name(responseJson, "result");
-	if (strcmp("succeeded", responseResult) == 0)
+	if (responseResult != NULL && strcmp("succeeded", responseResult) == 0)
 		result = true;
 
 	json_decref(responseJson);
