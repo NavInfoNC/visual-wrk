@@ -22,6 +22,9 @@ typedef struct CpuPerformance
 	Array percent;
 	Array corePercent;
 	int coreNum;
+	const char* architecture;
+	const char* model;
+	const char* MHz;
 } CpuPerformance;
 
 typedef struct MemPerformance
@@ -40,18 +43,38 @@ typedef struct IoPerformance
 	Array writeCount;
 } IoPerformance;
 
+typedef struct DiskInfo
+{
+	double total;
+	double percent;
+	const char* mountPoint;
+	const char* device;;
+} DiskInfo;
+
+typedef struct PlatformInfo
+{
+	const char* version;
+	const char* hostname;
+	const char* system;
+	const char* release;
+	const char* distribution;
+} PlatformInfo;
+
 bool startCollecting(const char* host, int duration, int interval, char* serverName, char* hash);
 json_t* stopCollecting(const char* host, char* hash);
 
-void initCpuPerformance(CpuPerformance* o);
-bool getCpuPerformance(json_t* buffer, CpuPerformance* cpuPerformance);
+CpuPerformance* getCpuPerformance(json_t* buffer);
 void releaseCpuPerformance(CpuPerformance* o);
 
-void initIoPerformance(IoPerformance* o);
-bool getMemPerformance(json_t* buffer, MemPerformance* memPerformance);
+MemPerformance* getMemPerformance(json_t* buffer);
 void releaseIoPerformance(IoPerformance* o);
 
-void initMemPerformance(MemPerformance* o);
-bool getIoPerformance(json_t* buffer, IoPerformance* ioPerformance);
+IoPerformance* getIoPerformance(json_t* buffer);
 void releaseMemPerformance(MemPerformance* o);
+
+PlatformInfo* getPlatformInfo(json_t* buffer);
+void releasePlatformInfo(PlatformInfo* o);
+
+DiskInfo** getDiskInfo(json_t* buffer, int* diskNum);
+void releaseDiskInfo(DiskInfo** o, int diskNum);
 #endif /* SERVER_PERF_H */

@@ -153,19 +153,23 @@ static void parseJsonArray(json_t* jsonArray, Array* array)
 	}
 }
 
-bool getCpuPerformance(json_t* buffer, CpuPerformance* cpuPerformance)
+CpuPerformance* getCpuPerformance(json_t* buffer)
 {
 	json_t* cpuJson = json_object_get(buffer, "cpu");
 	if (cpuJson == NULL)
-		return false;
+		return NULL;
+
+	CpuPerformance* cpuPerformance = (CpuPerformance*)malloc(sizeof(CpuPerformance));
+	memset(cpuPerformance, 0, sizeof(CpuPerformance));
 
 	json_t* percentJson = json_object_get(cpuJson, "percent");
 	if (percentJson != NULL)
 		parseJsonArray(percentJson, &cpuPerformance->percent);
 	
-	json_t* coreNum = json_object_get(cpuJson, "coreNum");
-	if (coreNum != NULL)
-		cpuPerformance->coreNum = (int)json_integer_value(coreNum);
+	cpuPerformance->architecture = json_string_value_of_name(cpuJson, "architecture");
+	cpuPerformance->model = json_string_value_of_name(cpuJson, "model");
+	cpuPerformance->MHz = json_string_value_of_name(cpuJson, "MHz");
+	cpuPerformance->coreNum = (int)json_integer_value_of_name(cpuJson, "coreNum");
 
 	json_t* coresPercentJson = json_object_get(cpuJson, "corePercent");
 	if (coresPercentJson != NULL)
@@ -185,18 +189,19 @@ bool getCpuPerformance(json_t* buffer, CpuPerformance* cpuPerformance)
 		}
 	}
 
-	return true;
+	return cpuPerformance;
 }
 
-bool getMemPerformance(json_t* buffer, MemPerformance* memPerformance)
+MemPerformance* getMemPerformance(json_t* buffer)
 {
 	json_t* memJson = json_object_get(buffer, "memory");
 	if (memJson == NULL)
-		return false;
+		return NULL;
 
-	json_t* totalJson = json_object_get(memJson, "total");
-	if (totalJson != NULL)
-		memPerformance->total = (int)json_integer_value(totalJson);
+	MemPerformance* memPerformance = (MemPerformance*)malloc(sizeof(MemPerformance));
+	memset(memPerformance, 0, sizeof(MemPerformance));
+
+	memPerformance->total = (int)json_integer_value_of_name(memJson, "total");
 
 	json_t* percentJson = json_object_get(memJson, "percent");
 	if (percentJson != NULL)
@@ -210,14 +215,17 @@ bool getMemPerformance(json_t* buffer, MemPerformance* memPerformance)
 	if (freeJson != NULL)
 		parseJsonArray(freeJson, &memPerformance->free);
 
-	return true;
+	return memPerformance;
 }
 
-bool getIoPerformance(json_t* buffer, IoPerformance* ioPerformance)
+IoPerformance* getIoPerformance(json_t* buffer)
 {
 	json_t* ioJson = json_object_get(buffer, "io");
 	if (ioJson == NULL)
-		return false;
+		return NULL;
+
+	IoPerformance* ioPerformance = (IoPerformance*)malloc(sizeof(IoPerformance));
+	memset(ioPerformance, 0, sizeof(IoPerformance));
 
 	json_t* readSizeJson = json_object_get(ioJson, "readSize");
 	if (readSizeJson != NULL)
@@ -235,119 +243,110 @@ bool getIoPerformance(json_t* buffer, IoPerformance* ioPerformance)
 	if (writeCountJson != NULL)
 		parseJsonArray(writeCountJson, &ioPerformance->writeCount);
 
-	return true;
+	return ioPerformance;
 }
 
-void initCpuPerformance(CpuPerformance* o)
+PlatformInfo* getPlatformInfo(json_t* buffer)
 {
-	o->coreNum = 0;
-	o->corePercent.count = 0;
-	o->corePercent.array = NULL;
-	o->percent.count = 0;
-	o->percent.array = NULL;
+	json_t* platformJson = json_object_get(buffer, "platform");
+	if (platformJson == NULL)
+		return NULL;
+
+	PlatformInfo* platformInfo = (PlatformInfo*)malloc(sizeof(PlatformInfo));
+	memset(platformInfo, 0, sizeof(PlatformInfo));
+
+	platformInfo->release = json_string_value_of_name(platformJson, "release");
+	platformInfo->distribution = json_string_value_of_name(platformJson, "distribution");
+	platformInfo->version = json_string_value_of_name(platformJson, "version");
+	platformInfo->system = json_string_value_of_name(platformJson, "system");
+	platformInfo->hostname = json_string_value_of_name(platformJson, "hostname");
+
+	return platformInfo;
+}
+
+DiskInfo** getDiskInfo(json_t* buffer, int* diskNum)
+{
+	json_t* disksJson = json_object_get(buffer, "disk");
+	if (disksJson == NULL)
+		return NULL;
+
+	*diskNum = json_array_size(disksJson);
+	DiskInfo** diskInfo = (DiskInfo**)malloc(sizeof(DiskInfo*) * (*diskNum));
+	for (int i = 0; i < *diskNum; i++)
+	{
+		json_t* diskJson = json_array_get(disksJson, i);
+		if (diskJson == NULL)
+			continue;
+
+		diskInfo[i] = (DiskInfo*)malloc(sizeof(DiskInfo));
+		diskInfo[i]->device = json_string_value_of_name(diskJson, "device");
+		diskInfo[i]->mountPoint = json_string_value_of_name(diskJson, "mountPoint");
+		diskInfo[i]->total = json_number_value_of_name(diskJson, "total");
+		diskInfo[i]->percent = json_number_value_of_name(diskJson, "percent");
+	}
+
+	return diskInfo;
 }
 
 void releaseCpuPerformance(CpuPerformance* o)
 {
-	free(o->corePercent.array);
-	free(o->percent.array);
-}
-
-void initIoPerformance(IoPerformance* o)
-{
-	o->readCount.count = 0;
-	o->readSize.count = 0;
-	o->writeCount.count = 0;
-	o->writeSize.count = 0;
-	o->readCount.array = NULL;
-	o->readSize.array = NULL;
-	o->writeCount.array = NULL;
-	o->writeSize.array = NULL;
+	if (o != NULL)
+	{
+		free(o->corePercent.array);
+		free(o->percent.array);
+		free(o);
+	}
 }
 
 void releaseIoPerformance(IoPerformance* o)
 {
-	free(o->readCount.array);
-	free(o->readSize.array);
-	free(o->writeCount.array);
-	free(o->writeSize.array);
-}
-
-void initMemPerformance(MemPerformance* o)
-{
-	o->total = 0;
-	o->free.array = NULL;
-	o->free.count = 0;
-	o->used.array = NULL;
-	o->used.count = 0;
-	o->percent.array = NULL;
-	o->percent.count = 0;
+	if (o != NULL)
+	{
+		free(o->readCount.array);
+		free(o->readSize.array);
+		free(o->writeCount.array);
+		free(o->writeSize.array);
+		free(o);
+	}
 }
 
 void releaseMemPerformance(MemPerformance* o)
 {
-	free(o->free.array);
-	free(o->used.array);
-	free(o->percent.array);
+	if (o != NULL)
+	{
+		free(o->free.array);
+		free(o->used.array);
+		free(o->percent.array);
+		free(o);
+	}
 }
-//int main(void)
-//{
-//	int duration = 5;
-//	unsigned char hash[MD5_DIGEST_LENGTH];
-//	bool result = startCollecting(URL_PREFFIX, duration, 1, "java", hash);
-//	if (result)
-//	{
-//		sleep(duration);
-//
-//		json_t* buffer = stopCollecting(URL_PREFFIX, hash);
-//		if (buffer == NULL)
-//		{
-//			printf("stopCollecting failed\n");
-//			return -1;
-//		}
-//
-//		CpuPerformance cpuPerformance;
-//		initCpuPerformance(&cpuPerformance);
-//		if (getCpuPerformance(buffer, &cpuPerformance))
-//		{
-//			printf("core num:%d\n", cpuPerformance.coreNum);
-//			for (int i = 0; i < cpuPerformance.percent.count; i++)
-//			{
-//				double core1 = cpuPerformance.corePercent.array[i * 4];
-//				double core2 = cpuPerformance.corePercent.array[i * 4 + 1];
-//				double core3 = cpuPerformance.corePercent.array[i * 4 + 2];
-//				double core4 = cpuPerformance.corePercent.array[i * 4 + 3];
-//				printf("total:%f,core1:%f,core2:%f,core3:%f,core4:%f\n", cpuPerformance.percent.array[i], 
-//						core1, core2, core3, core4);
-//			}
-//		}
-//
-//		IoPerformance ioPerformance;
-//		initIoPerformance(&ioPerformance);
-//		if (getIoPerformance(buffer, &ioPerformance))
-//		{
-//			for (int i = 0; i < ioPerformance.readSize.count; i++)
-//			{
-//				printf("readSize:%f, writeSize:%f, readCount:%f, writeCount:%f\n", ioPerformance.readSize.array[i], 
-//						ioPerformance.writeSize.array[i], ioPerformance.readCount.array[i], ioPerformance.writeCount.array[i]);
-//			}
-//		}
-//
-//		MemPerformance memPerformance;
-//		initMemPerformance(&memPerformance);
-//		if (getMemPerformance(buffer, &memPerformance))
-//		{
-//			printf("total memory:%d\n", memPerformance.total);
-//			for (int i = 0; i < memPerformance.percent.count; i++)
-//			{
-//				printf("used:%f, free:%f, percent:%f\n", memPerformance.used.array[i], memPerformance.free.array[i], memPerformance.percent.array[i]);
-//			}
-//		}
-//
-//		json_decref(buffer);
-//	}
-//	else
-//		printf("startCollecting failed!\n");
-//
-//	return 0;
-//}
+void initPlatformInfo(PlatformInfo* o)
+{
+	o->distribution = NULL;
+	o->version = NULL;
+	o->release = NULL;
+	o->hostname = NULL;
+	o->system = NULL;
+}
+
+void releasePlatformInfo(PlatformInfo* o)
+{
+	if (o != NULL)
+	{
+		free(o);
+	}
+}
+
+void releaseDiskInfo(DiskInfo** o, int diskNum)
+{
+	if (o != NULL)
+	{
+		for (int i = 0; i < diskNum; i++)
+		{
+			if (o[i] != NULL)
+				free(o[i]);
+		}
+		free(o);
+	}
+}
+

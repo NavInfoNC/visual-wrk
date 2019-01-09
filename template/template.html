@@ -89,6 +89,21 @@
                                 </table>
                             </div>
                             <div>
+                                <h2>SERVER INFO</h2>
+                                <div style="display:inline-block;width:33%;vertical-align:top;">
+                                    <h5>Platform Info</h5>                                    
+                                    <pre class="codehilite" style="white-space: pre-wrap">${platform_info_data}</pre>
+                                </div>                                                        
+                                <div style="display:inline-block;width:33%;vertical-align:top;">
+                                    <h5>General Info</h5>                                     
+                                    <pre class="codehilite" style="white-space: pre-wrap">${general_info_data}</pre>
+                                </div>                                                        
+                                <div style="display:inline-block;width:33%;vertical-align:top;">
+                                    <h5>Disk Info</h5>
+                                    <pre class="codehilite" style="white-space: pre-wrap">${disk_info_data}</pre>
+                                </div>
+                            </div>
+                            <div>
                                 <h2>SERVER PERFORMANCE:</h2>
                                 <pre class="codehilite">
                                     ${cpu_chart_div}
