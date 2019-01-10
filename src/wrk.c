@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 
     if (parse_args(&cfg, url, headers, argc, argv)) {
         usage();
-        exit(1);
+        goto FAILED;
     }
 
     decide_thread_num(&cfg);
@@ -130,11 +130,11 @@ int main(int argc, char **argv) {
     lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
     if (strlen(url) == 0 || !script_parse_url(url, &parts)) {
         fprintf(stderr, "invalid URL: %s\n", url);
-        exit(1);
+        goto FAILED;
     }
 
     if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
-        exit(1);
+        goto FAILED;
 
     system("cp template/* report -rf");
     g_html = fopen("report/log.html", "w");
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     if (!script_resolve(L, host, service)) {
         char *msg = strerror(errno);
         fprintf(stderr, "unable to connect to %s:%s %s\n", host, service, msg);
-        exit(1);
+        goto FAILED;
     }
 
     cfg.host = host;
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
         if ((cfg.ctx = ssl_init()) == NULL) {
             fprintf(stderr, "unable to initialize SSL\n");
             ERR_print_errors_fp(stderr);
-            exit(1);
+            goto FAILED;
         }
         sock.connect  = ssl_connect;
         sock.close    = ssl_close;
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
         if (!t->loop || pthread_create(&t->thread, NULL, &thread_main, t)) {
             char *msg = strerror(errno);
             fprintf(stderr, "unable to create thread %"PRIu64": %s\n", i, msg);
-            exit(2);
+            goto FAILED;
         }
     }
 
@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
-        exit(1);
+        goto FAILED;
     }
 
     print_test_parameter(url);
@@ -308,6 +308,10 @@ int main(int argc, char **argv) {
     free(g_html_template);
 
     return 0;
+
+FAILED:
+    free(headers);
+    return 1;
 }
 
 void *thread_main(void *arg) {
@@ -525,7 +529,13 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     size_t len = c->length  - c->written;
     size_t n;
 
-    switch (sock.write(c, buf, len, &n)) {
+    status r = sock.write(c, buf, len, &n);
+    if (cfg.dynamic) {
+        free(c->request);
+        c->request = NULL;
+    }
+
+    switch (r) {
         case OK:    break;
         case ERROR: goto error;
         case RETRY: return;

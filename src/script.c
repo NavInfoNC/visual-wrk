@@ -312,8 +312,10 @@ size_t script_verify_request(lua_State *L) {
         }
 
         fprintf(stderr, "%s at %d:%d\n", msg, line, column);
+        free(request);
         exit(1);
     }
+    free(request);
 
     return count;
 }
