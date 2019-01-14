@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 
     if (parse_args(&cfg, url, headers, argc, argv)) {
         usage();
-        exit(1);
+        goto FAILED;
     }
 
     decide_thread_num(&cfg);
@@ -130,11 +130,11 @@ int main(int argc, char **argv) {
     lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
     if (strlen(url) == 0 || !script_parse_url(url, &parts)) {
         fprintf(stderr, "invalid URL: %s\n", url);
-        exit(1);
+        goto FAILED;
     }
 
     if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
-        exit(1);
+        goto FAILED;
 
     system("cp template/* report -rf");
     g_html = fopen("report/log.html", "w");
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     if (!script_resolve(L, host, service)) {
         char *msg = strerror(errno);
         fprintf(stderr, "unable to connect to %s:%s %s\n", host, service, msg);
-        exit(1);
+        goto FAILED;
     }
 
     cfg.host = host;
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
         if ((cfg.ctx = ssl_init()) == NULL) {
             fprintf(stderr, "unable to initialize SSL\n");
             ERR_print_errors_fp(stderr);
-            exit(1);
+            goto FAILED;
         }
         sock.connect  = ssl_connect;
         sock.close    = ssl_close;
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
         if (!t->loop || pthread_create(&t->thread, NULL, &thread_main, t)) {
             char *msg = strerror(errno);
             fprintf(stderr, "unable to create thread %"PRIu64": %s\n", i, msg);
-            exit(2);
+            goto FAILED;
         }
     }
 
@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
-        exit(1);
+        goto FAILED;
     }
 
     print_test_parameter(url);
@@ -308,6 +308,10 @@ int main(int argc, char **argv) {
     free(g_html_template);
 
     return 0;
+
+FAILED:
+    free(headers);
+    return 1;
 }
 
 void *thread_main(void *arg) {
@@ -525,7 +529,13 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     size_t len = c->length  - c->written;
     size_t n;
 
-    switch (sock.write(c, buf, len, &n)) {
+    status r = sock.write(c, buf, len, &n);
+    if (cfg.dynamic) {
+        free(c->request);
+        c->request = NULL;
+    }
+
+    switch (r) {
         case OK:    break;
         case ERROR: goto error;
         case RETRY: return;
@@ -968,96 +978,126 @@ static void print_result_details(struct resultForm *o, errors *errors) {
 }
 
 static void print_cpu_percent(json_t* json, uint64_t start_time) {
-	CpuPerformance cpuPerformance;
-	initCpuPerformance(&cpuPerformance);
-	if (!getCpuPerformance(json, &cpuPerformance)) {
-		releaseCpuPerformance(&cpuPerformance);
+	CpuPerformance* cpu_performance = getCpuPerformance(json);
+	if (cpu_performance == NULL)
 		return;
-	}
 
     char *performance_data = NULL;
     char timeArray[40];
-	int count = cpuPerformance.percent.count;
+	int count = cpu_performance->percent.count;
     for (uint64_t i = 0; i < count; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
 
 		char format_string[1024];
-		sprintf(format_string, "\n{\"date\":\"%s\", \"cpu\":%lf", timeArray, cpuPerformance.percent.array[i]);
-		for (int j = 0; j < cpuPerformance.coreNum; j++) {
+		sprintf(format_string, "\n{\"date\":\"%s\", \"cpu\":%lf", timeArray, cpu_performance->percent.array[i]);
+		for (int j = 0; j < cpu_performance->coreNum; j++) {
 			int offset = strlen(format_string);
-			int index = i * cpuPerformance.coreNum + j;
-			sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpuPerformance.corePercent.array[index]);
+			int index = i * cpu_performance->coreNum + j;
+			sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpu_performance->corePercent.array[index]);
 		}
 		strcat(format_string, "},");
 
         aprintf(&performance_data, format_string);
     }
 
+	char *general_info_data = NULL;
+	aprintf(&general_info_data, "CPU Model:%s\nCPU Architecture:%s\nCPU MHz:%s\nCPU(s):%d\n", cpu_performance->model,
+			cpu_performance->architecture, cpu_performance->MHz, cpu_performance->coreNum);
+
 	char cpu_num[4];
-	snprintf(cpu_num, sizeof(cpu_num), "%d", cpuPerformance.coreNum);
+	snprintf(cpu_num, sizeof(cpu_num), "%d", cpu_performance->coreNum);
 	record_html_log("${cpu_num}", cpu_num);
 	record_html_log("${cpu_chart_div}", "<div id=\"cpu_chart\"></div>");
     record_html_log("${cpu_chart_data}", performance_data);
-	releaseCpuPerformance(&cpuPerformance);
-	return;
+    record_html_log("${general_info_data}", general_info_data);
+	releaseCpuPerformance(cpu_performance);
+	free(performance_data);
+	free(general_info_data);
 }
 
 static void print_mem_percent(json_t* json, uint64_t start_time) {
-	MemPerformance memPerformance;
-	initMemPerformance(&memPerformance);
-	if (!getMemPerformance(json, &memPerformance)) {
-		releaseMemPerformance(&memPerformance);
+	MemPerformance* memPerformance = getMemPerformance(json);
+	if (memPerformance == NULL)
 		return;
-	}
 
     char *performance_data = NULL;
     char timeArray[40];
-	int count = memPerformance.percent.count;
+	int count = memPerformance->percent.count;
     for (uint64_t i = 0; i < count; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
         aprintf(&performance_data, "\n{\"date\":\"%s\", \"mem\":%lf},",
-				timeArray, memPerformance.percent.array[i]);
+				timeArray, memPerformance->percent.array[i]);
     }
 
 	record_html_log("${mem_chart_div}", "<div id=\"mem_chart\"></div>");
     record_html_log("${mem_chart_data}", performance_data);
-	releaseMemPerformance(&memPerformance);
-	return;
+	releaseMemPerformance(memPerformance);
+	free(performance_data);
 }
 
 static void print_io_percent(json_t* json, uint64_t start_time) {
-	IoPerformance ioPerformance;
-	initIoPerformance(&ioPerformance);
-	if (!getIoPerformance(json, &ioPerformance)) {
-		releaseIoPerformance(&ioPerformance);
+	IoPerformance* ioPerformance = getIoPerformance(json);
+	if (ioPerformance == NULL)
 		return;
-	}
 
     char *performance_data = NULL;
     char timeArray[40];
-	int count = ioPerformance.readSize.count;
+	int count = ioPerformance->readSize.count;
     for (int i = 0; i < count - 1; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
-		double readSize = i != 0 ? ioPerformance.readSize.array[i] - ioPerformance.readSize.array[i - 1] : 0;
-		double writeSize = i != 0 ? ioPerformance.writeSize.array[i] - ioPerformance.writeSize.array[i - 1] : 0;
-		int readCount = i != 0 ? ioPerformance.readCount.array[i] - ioPerformance.readCount.array[i - 1] : 0;
-		int writeCount = i != 0 ? ioPerformance.writeCount.array[i] - ioPerformance.writeCount.array[i - 1] : 0;
+		double readSize = i != 0 ? ioPerformance->readSize.array[i] - ioPerformance->readSize.array[i - 1] : 0;
+		double writeSize = i != 0 ? ioPerformance->writeSize.array[i] - ioPerformance->writeSize.array[i - 1] : 0;
+		int readCount = i != 0 ? ioPerformance->readCount.array[i] - ioPerformance->readCount.array[i - 1] : 0;
+		int writeCount = i != 0 ? ioPerformance->writeCount.array[i] - ioPerformance->writeCount.array[i - 1] : 0;
 		aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
 				timeArray, readSize, writeSize, readCount, writeCount);
     }
 
 	record_html_log("${io_chart_div}", "<div id=\"io_chart\"></div>");
     record_html_log("${io_chart_data}", performance_data);
-	releaseIoPerformance(&ioPerformance);
+	releaseIoPerformance(ioPerformance);
+	free(performance_data);
+}
+
+static void print_platform_info(json_t* json) {
+	PlatformInfo* platform_info = getPlatformInfo(json);
+	if (platform_info == NULL)
+		return;
+
+	char *platform_info_data = NULL;
+	aprintf(&platform_info_data, "hostname:%s\nsystem:%s\nrelease:%s\ndistribution:%s\n", platform_info->hostname,
+			platform_info->system, platform_info->release, platform_info->distribution);
+	record_html_log("${platform_info_data}", platform_info_data);
+	releasePlatformInfo(platform_info);
+	free(platform_info_data);
+}
+
+static void print_disk_info(json_t* json) {
+	int disk_num = 0;
+	DiskInfo** disk_info = getDiskInfo(json, &disk_num);
+	if (disk_info == NULL)
+		return;
+
+	char* disk_info_data = NULL;
+	for (int i = 0; i < disk_num; i++)
+	{
+		aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mountPoint, 
+				disk_info[i]->percent, disk_info[i]->total);
+	}
+	record_html_log("${disk_info_data}", disk_info_data);
+	releaseDiskInfo(disk_info, disk_num);
+	free(disk_info_data);
 }
 
 static void print_dstServerPerformance(CollectConfig* collectCfg, json_t* bufferJson) {
 	print_cpu_percent(bufferJson, collectCfg->start_time);
 	print_mem_percent(bufferJson, collectCfg->start_time);
 	print_io_percent(bufferJson, collectCfg->start_time);
+	print_disk_info(bufferJson);
+	print_platform_info(bufferJson);
 }
 
 
