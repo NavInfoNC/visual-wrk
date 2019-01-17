@@ -6,6 +6,7 @@
 #include "main.h"
 
 #define MAX_URL_LENGTH 2048
+#define JSON_FILE_DIR "report"
 
 static uint64_t start_thread_time = 0;
 static bool thread_concurrency;
@@ -22,7 +23,8 @@ static struct config {
     bool     latency;
     char    *host;
     char    *script;
-    char    *json_file;
+    char    *json_template_file;
+    char    json_file[256];
     SSL_CTX *ctx;
 } cfg;
 
@@ -66,7 +68,6 @@ static void handler(int sig) {
     stop = 1;
 }
 
-static FILE *g_html;
 static char *g_html_template;
 
 static void usage() {
@@ -87,7 +88,7 @@ static void usage() {
            "  Time arguments may include a time unit (2s, 2m, 2h)\n");
 }
 
-static char *get_template(char *template_name) {
+static char *get_template(const char *template_name) {
     struct stat s;
     if (stat(template_name, &s) == -1 || s.st_size == 0)
         return NULL;
@@ -105,6 +106,24 @@ static char *get_template(char *template_name) {
     return template;
 }
 
+static bool save_template(const char *dst_path, const char *buffer, int buffer_size) {
+    FILE *fd = fopen(dst_path, "w");
+    if (fd == NULL) {          
+            fprintf(stderr, "fopen %s failed:get last error:%d\n", dst_path, errno);
+            return false;          
+        }
+
+    bool result = true;        
+    int written_size = fwrite(buffer, sizeof(char), buffer_size, fd); 
+    if (written_size != buffer_size) { 
+            fprintf(stderr, "fwrite %s failed:get last error:%d\n", dst_path, errno);
+            result = false;        
+        }                          
+    fclose(fd);                
+
+    return result;             
+} 
+
 static void decide_thread_num(struct config *cfg) {
     if (cfg->connections < 500)
         cfg->threads = 1;
@@ -114,16 +133,133 @@ static void decide_thread_num(struct config *cfg) {
     }
 }
 
+static bool build_test_file(const char *template_path, const char *url) {
+    bool result = false;
+    json_error_t error;
+    json_t *template_json = json_load_file(template_path, 0, &error);
+    if (template_json == NULL)
+        goto END;
+
+    if (url != NULL && strlen(url) > 0)
+        json_object_set(template_json, "url", json_string(url));
+
+    if (json_dump_file(template_json, cfg.json_file, JSON_INDENT(4)) == 0)
+        result = true;
+END:
+    json_decref(template_json);
+    return result;
+}
+
+static bool build_mixed_file(const char *url, char **file_list_link) {
+    bool result = false;
+    json_error_t error;
+    json_t *template_json = json_load_file(cfg.json_template_file, 0, &error);
+    if (template_json == NULL) {
+        fprintf(stderr, "load json file (%s) failed\n", cfg.json_template_file);
+        goto END;
+    }
+
+    json_t *mixed_test_json = json_object_get(template_json, "mixed_test");
+    if (mixed_test_json == NULL) {
+        fprintf(stderr, "cannot get mixed_test field in %s\n", cfg.json_template_file);
+        goto END;
+    }
+
+    int file_num = json_array_size(mixed_test_json);
+    for (int i = 0; i < file_num; i++) {
+        json_t *test_json = json_array_get(mixed_test_json, i);
+        if (test_json == NULL) {
+            fprintf(stderr, "get array from %s failed\n", cfg.json_template_file);
+            goto END;
+        }
+
+        const char *file_path = json_string_value_of_name(test_json, "file");
+        if (file_path == NULL) {
+            fprintf(stderr, "cannot get file field in %s\n", cfg.json_template_file);
+            goto END;
+        }
+
+        if (!build_test_file(file_path, url)) {
+            fprintf(stderr, "build json file failed %s\n", file_path);
+            goto END;
+        }
+
+        char *p = strrchr(file_path, '/');
+        if (p != NULL && p + 1 != 0) {
+            char *dst_file = NULL;
+            aprintf(&dst_file, "%s/%s", JSON_FILE_DIR, p + 1);
+            aprintf(file_list_link, "<div><a href=\"../%s\">%s</a></div>", dst_file, dst_file);
+            json_object_set(test_json, "file", json_string(dst_file));
+            free(dst_file);
+        } else{
+            fprintf(stderr, "file field(%s) error in %s\n", file_path, cfg.json_template_file);
+            goto END;
+        }
+    }
+
+    if (url != NULL && strlen(url) != 0) {
+        if (json_object_set_new_nocheck(template_json, "url", json_string(url)) == -1)
+            goto END;
+    }
+
+    if (json_dump_file(template_json, cfg.json_file, JSON_INDENT(4)) == 0)
+        result = true;
+
+END:
+    json_decref(template_json);
+    return result;
+}
+
+static bool build_test_data(char *url) {
+    char *p = strrchr(cfg.json_template_file, '/');
+    if (p == NULL)
+        return false;
+
+    char *file_list_link = NULL;
+    aprintf(&file_list_link, "<div><a href=\"../%s\">%s</a></div>", cfg.json_file, cfg.json_file);
+
+    bool result = false;
+    if (strncmp(p + 1, "mixed_", strlen("mixed_")) == 0)
+        result = build_mixed_file(url, &file_list_link);
+    else
+        result = build_test_file(cfg.json_template_file, url);
+
+    print_test_parameter(url, file_list_link);
+    free(file_list_link);
+    return result;
+}
+
 int main(int argc, char **argv) {
     thread_concurrency = false;
     char url[MAX_URL_LENGTH] = {0};
     char **headers = zmalloc(argc * sizeof(char *));
     struct http_parser_url parts = {};
 
+    if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
+        goto FAILED;
+
+    system("cp template/* report -rf");
+
+    g_html_template = get_template("report/template.html");
+    if (g_html_template == NULL) {
+        fprintf(stderr, "Cannot open HTML template");
+        free(g_html_template);
+        goto FAILED;
+    }
+
     if (parse_args(&cfg, url, headers, argc, argv)) {
         usage();
         goto FAILED;
     }
+
+    if (strlen(url) == 0) {
+        const char *wrk_url = getenv("WRK_URL");
+        if (wrk_url != NULL)
+            strncpy(url, wrk_url, strlen(wrk_url));
+    }
+
+    if (!build_test_data(url))
+        goto FAILED;
 
     decide_thread_num(&cfg);
 
@@ -132,17 +268,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "invalid URL: %s\n", url);
         goto FAILED;
     }
-
-    if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
-        goto FAILED;
-
-    system("cp template/* report -rf");
-    g_html = fopen("report/log.html", "w");
-    if (g_html == NULL) {
-        g_html = stderr;
-        fprintf(stderr, "get last error:%d\n", errno);
-    }
-
     char *schema  = copy_url_part(url, &parts, UF_SCHEMA);
     char *host    = copy_url_part(url, &parts, UF_HOST);
     char *port    = copy_url_part(url, &parts, UF_PORT);
@@ -156,11 +281,11 @@ int main(int argc, char **argv) {
 
     cfg.host = host;
 
-	CollectConfig collectCfg;
-	collectCfg.result  = startCollecting(cfg.host, cfg.duration, cfg.interval, NULL, collectCfg.hash_string);
-	if (!collectCfg.result)
-		fprintf(stderr, "start collecting failed");
-	collectCfg.start_time = time(NULL);
+    CollectConfig collectCfg;
+    collectCfg.result  = startCollecting(cfg.host, cfg.duration, cfg.interval, NULL, collectCfg.hash_string);
+    if (!collectCfg.result)
+        fprintf(stderr, "start collecting failed");
+    collectCfg.start_time = time(NULL);
 
     if (!strncmp("https", schema, 5)) {
         if ((cfg.ctx = ssl_init()) == NULL) {
@@ -216,15 +341,6 @@ int main(int argc, char **argv) {
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
-    g_html_template = get_template("report/template.html");
-    if (g_html_template == NULL) {
-        fprintf(stderr, "Cannot open HTML template");
-        free(g_html_template);
-        goto FAILED;
-    }
-
-    print_test_parameter(url);
-    
     start_thread_time = time_us();
     uint64_t complete = 0;
     uint64_t bytes    = 0;
@@ -285,15 +401,15 @@ int main(int argc, char **argv) {
     
     print_result_form();
 
-	if (collectCfg.result) {
-		json_t* responseJson = stopCollecting(cfg.host, collectCfg.hash_string);
-		if (responseJson != NULL)
-			print_dstServerPerformance(&collectCfg, responseJson);
-		else
-			printf("stopCollecting failed\n");
+    if (collectCfg.result) {
+        json_t* responseJson = stopCollecting(cfg.host, collectCfg.hash_string);
+        if (responseJson != NULL)
+            print_dstServerPerformance(&collectCfg, responseJson);
+        else
+            printf("stopCollecting failed\n");
 
-		json_decref(responseJson);
-	}
+        json_decref(responseJson);
+    }
 
     if (script_has_done(L)) {
         script_summary(L, runtime_us, complete, bytes);
@@ -302,15 +418,14 @@ int main(int argc, char **argv) {
     }
 
 
-	clear_unused_variable();
-    fwrite(g_html_template, strlen(g_html_template), sizeof(char), g_html);
-    fclose(g_html);
+    clear_unused_variable();
+    save_template("report/log.html", g_html_template, strlen(g_html_template));
     free(g_html_template);
 
     return 0;
 
 FAILED:
-    free(headers);
+    zfree(headers);
     return 1;
 }
 
@@ -636,7 +751,9 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
                 cfg->script = optarg;
                 break;
             case 'j':
-                cfg->json_file = optarg;
+                cfg->json_template_file = optarg;
+                char *p = strrchr(optarg, '/');
+                sprintf(cfg->json_file, "%s/%s", JSON_FILE_DIR, p + 1);
                 break;
             case 'H':
                 *header++ = optarg;
@@ -662,7 +779,7 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
 
     if (!cfg->threads || !cfg->duration) return -1;
 
-    if (cfg->script == NULL && cfg->json_file != NULL)
+    if (cfg->script == NULL && cfg->json_template_file != NULL)
         cfg->script = "/usr/local/lib/visual_wrk/multi_requests.lua";
 
     if (!cfg->connections || cfg->connections < cfg->threads) {
@@ -684,7 +801,7 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
     return 0;
 }
 
-char *str_replace(char *orig, char *rep, char *with) {
+char *str_replace(char *orig, const char *rep, const char *with) {
     char *result; // the return string
     char *ins;    // the next insert point
     char *tmp;    // varies
@@ -736,26 +853,26 @@ static void record_html_log(char *key, char *value) {
 }
 
 static bool get_unused_variable(char *variable) {
-	char *start = strstr(g_html_template, "${");
-	if (start == NULL)
-		return false;
+    char *start = strstr(g_html_template, "${");
+    if (start == NULL)
+        return false;
 
-	char *end = strstr(start, "}");
-	if (end == NULL)
-		return false;
+    char *end = strstr(start, "}");
+    if (end == NULL)
+        return false;
 
-	int variable_size = end - start + 1;
-	strncpy(variable, start, variable_size);
-	variable[variable_size] = 0;
-	return true;
+    int variable_size = end - start + 1;
+    strncpy(variable, start, variable_size);
+    variable[variable_size] = 0;
+    return true;
 }
 
 static void clear_unused_variable() {
-	char unused_variable[256];
-	record_html_log("${cpu_num}", "0");
-	while(get_unused_variable(unused_variable)) {
-		record_html_log(unused_variable, " ");
-	}
+    char unused_variable[256];
+    record_html_log("${cpu_num}", "0");
+    while(get_unused_variable(unused_variable)) {
+        record_html_log(unused_variable, " ");
+    }
 }
 
 static void print_stats_error_code(errors *errors) {
@@ -875,7 +992,7 @@ static void print_stats_requests(stats *stats) {
 
     record_html_log("${requests_frequency}", buff);
     record_html_log("${rps_chart_data}", rps_data);
-	record_html_log("${rps_chart_div}", "<div id=\"rps_chart\"></div>");
+    record_html_log("${rps_chart_div}", "<div id=\"rps_chart\"></div>");
     free(rps_data);
 }
 
@@ -936,8 +1053,8 @@ static void print_result_form() {
     record_html_log("${rps_PorNstdev}", o->rps_PorNstdev);
 }
 
-static void print_test_parameter(const char *url) {
-    record_html_log("${json_file}", cfg.json_file);
+static void print_test_parameter(const char *url, char *file_list_link) {
+    record_html_log("${file_list_link}", file_list_link);
 
     char buff[1024];
     char *time = format_time_s(cfg.duration);
@@ -978,126 +1095,125 @@ static void print_result_details(struct resultForm *o, errors *errors) {
 }
 
 static void print_cpu_percent(json_t* json, uint64_t start_time) {
-	CpuPerformance* cpu_performance = getCpuPerformance(json);
-	if (cpu_performance == NULL)
-		return;
+    CpuPerformance* cpu_performance = getCpuPerformance(json);
+    if (cpu_performance == NULL)
+        return;
 
     char *performance_data = NULL;
     char timeArray[40];
-	int count = cpu_performance->percent.count;
+    int count = cpu_performance->percent.count;
     for (uint64_t i = 0; i < count; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
 
-		char format_string[1024];
-		sprintf(format_string, "\n{\"date\":\"%s\", \"cpu\":%lf", timeArray, cpu_performance->percent.array[i]);
-		for (int j = 0; j < cpu_performance->coreNum; j++) {
-			int offset = strlen(format_string);
-			int index = i * cpu_performance->coreNum + j;
-			sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpu_performance->corePercent.array[index]);
-		}
-		strcat(format_string, "},");
+        char format_string[1024];
+        sprintf(format_string, "\n{\"date\":\"%s\", \"cpu\":%lf", timeArray, cpu_performance->percent.array[i]);
+        for (int j = 0; j < cpu_performance->coreNum; j++) {
+            int offset = strlen(format_string);
+            int index = i * cpu_performance->coreNum + j;
+            sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpu_performance->corePercent.array[index]);
+        }
+        strcat(format_string, "},");
 
         aprintf(&performance_data, format_string);
     }
 
-	char *general_info_data = NULL;
-	aprintf(&general_info_data, "CPU Model:%s\nCPU Architecture:%s\nCPU MHz:%s\nCPU(s):%d\n", cpu_performance->model,
-			cpu_performance->architecture, cpu_performance->MHz, cpu_performance->coreNum);
+    char *general_info_data = NULL;
+    aprintf(&general_info_data, "CPU Model:%s\nCPU Architecture:%s\nCPU MHz:%s\nCPU(s):%d\n", cpu_performance->model,
+            cpu_performance->architecture, cpu_performance->MHz, cpu_performance->coreNum);
 
-	char cpu_num[4];
-	snprintf(cpu_num, sizeof(cpu_num), "%d", cpu_performance->coreNum);
-	record_html_log("${cpu_num}", cpu_num);
-	record_html_log("${cpu_chart_div}", "<div id=\"cpu_chart\"></div>");
+    char cpu_num[4];
+    snprintf(cpu_num, sizeof(cpu_num), "%d", cpu_performance->coreNum);
+    record_html_log("${cpu_num}", cpu_num);
+    record_html_log("${cpu_chart_div}", "<div id=\"cpu_chart\"></div>");
     record_html_log("${cpu_chart_data}", performance_data);
     record_html_log("${general_info_data}", general_info_data);
-	releaseCpuPerformance(cpu_performance);
-	free(performance_data);
-	free(general_info_data);
+    releaseCpuPerformance(cpu_performance);
+    free(performance_data);
+    free(general_info_data);
 }
 
 static void print_mem_percent(json_t* json, uint64_t start_time) {
-	MemPerformance* memPerformance = getMemPerformance(json);
-	if (memPerformance == NULL)
-		return;
+    MemPerformance* memPerformance = getMemPerformance(json);
+    if (memPerformance == NULL)
+        return;
 
     char *performance_data = NULL;
     char timeArray[40];
-	int count = memPerformance->percent.count;
+    int count = memPerformance->percent.count;
     for (uint64_t i = 0; i < count; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
         aprintf(&performance_data, "\n{\"date\":\"%s\", \"mem\":%lf},",
-				timeArray, memPerformance->percent.array[i]);
+                timeArray, memPerformance->percent.array[i]);
     }
 
-	record_html_log("${mem_chart_div}", "<div id=\"mem_chart\"></div>");
+    record_html_log("${mem_chart_div}", "<div id=\"mem_chart\"></div>");
     record_html_log("${mem_chart_data}", performance_data);
-	releaseMemPerformance(memPerformance);
-	free(performance_data);
+    releaseMemPerformance(memPerformance);
+    free(performance_data);
 }
 
 static void print_io_percent(json_t* json, uint64_t start_time) {
-	IoPerformance* ioPerformance = getIoPerformance(json);
-	if (ioPerformance == NULL)
-		return;
+    IoPerformance* ioPerformance = getIoPerformance(json);
+    if (ioPerformance == NULL)
+        return;
 
     char *performance_data = NULL;
     char timeArray[40];
-	int count = ioPerformance->readSize.count;
+    int count = ioPerformance->readSize.count;
     for (int i = 0; i < count - 1; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
-		double readSize = i != 0 ? ioPerformance->readSize.array[i] - ioPerformance->readSize.array[i - 1] : 0;
-		double writeSize = i != 0 ? ioPerformance->writeSize.array[i] - ioPerformance->writeSize.array[i - 1] : 0;
-		int readCount = i != 0 ? ioPerformance->readCount.array[i] - ioPerformance->readCount.array[i - 1] : 0;
-		int writeCount = i != 0 ? ioPerformance->writeCount.array[i] - ioPerformance->writeCount.array[i - 1] : 0;
-		aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
-				timeArray, readSize, writeSize, readCount, writeCount);
+        double readSize = i != 0 ? ioPerformance->readSize.array[i] - ioPerformance->readSize.array[i - 1] : 0;
+        double writeSize = i != 0 ? ioPerformance->writeSize.array[i] - ioPerformance->writeSize.array[i - 1] : 0;
+        int readCount = i != 0 ? ioPerformance->readCount.array[i] - ioPerformance->readCount.array[i - 1] : 0;
+        int writeCount = i != 0 ? ioPerformance->writeCount.array[i] - ioPerformance->writeCount.array[i - 1] : 0;
+        aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
+                timeArray, readSize, writeSize, readCount, writeCount);
     }
 
-	record_html_log("${io_chart_div}", "<div id=\"io_chart\"></div>");
+    record_html_log("${io_chart_div}", "<div id=\"io_chart\"></div>");
     record_html_log("${io_chart_data}", performance_data);
-	releaseIoPerformance(ioPerformance);
-	free(performance_data);
+    releaseIoPerformance(ioPerformance);
+    free(performance_data);
 }
 
 static void print_platform_info(json_t* json) {
-	PlatformInfo* platform_info = getPlatformInfo(json);
-	if (platform_info == NULL)
-		return;
+    PlatformInfo* platform_info = getPlatformInfo(json);
+    if (platform_info == NULL)
+        return;
 
-	char *platform_info_data = NULL;
-	aprintf(&platform_info_data, "hostname:%s\nsystem:%s\nrelease:%s\ndistribution:%s\n", platform_info->hostname,
-			platform_info->system, platform_info->release, platform_info->distribution);
-	record_html_log("${platform_info_data}", platform_info_data);
-	releasePlatformInfo(platform_info);
-	free(platform_info_data);
+    char *platform_info_data = NULL;
+    aprintf(&platform_info_data, "hostname:%s\nsystem:%s\nrelease:%s\ndistribution:%s\n", platform_info->hostname,
+            platform_info->system, platform_info->release, platform_info->distribution);
+    record_html_log("${platform_info_data}", platform_info_data);
+    releasePlatformInfo(platform_info);
+    free(platform_info_data);
 }
 
 static void print_disk_info(json_t* json) {
-	int disk_num = 0;
-	DiskInfo** disk_info = getDiskInfo(json, &disk_num);
-	if (disk_info == NULL)
-		return;
+    int disk_num = 0;
+    DiskInfo** disk_info = getDiskInfo(json, &disk_num);
+    if (disk_info == NULL)
+        return;
 
-	char* disk_info_data = NULL;
-	for (int i = 0; i < disk_num; i++)
-	{
-		aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mountPoint, 
-				disk_info[i]->percent, disk_info[i]->total);
-	}
-	record_html_log("${disk_info_data}", disk_info_data);
-	releaseDiskInfo(disk_info, disk_num);
-	free(disk_info_data);
+    char* disk_info_data = NULL;
+    for (int i = 0; i < disk_num; i++)
+    {
+        aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mountPoint, 
+                disk_info[i]->percent, disk_info[i]->total);
+    }
+    record_html_log("${disk_info_data}", disk_info_data);
+    releaseDiskInfo(disk_info, disk_num);
+    free(disk_info_data);
 }
 
 static void print_dstServerPerformance(CollectConfig* collectCfg, json_t* bufferJson) {
-	print_cpu_percent(bufferJson, collectCfg->start_time);
-	print_mem_percent(bufferJson, collectCfg->start_time);
-	print_io_percent(bufferJson, collectCfg->start_time);
-	print_disk_info(bufferJson);
-	print_platform_info(bufferJson);
+    print_cpu_percent(bufferJson, collectCfg->start_time);
+    print_mem_percent(bufferJson, collectCfg->start_time);
+    print_io_percent(bufferJson, collectCfg->start_time);
+    print_disk_info(bufferJson);
+    print_platform_info(bufferJson);
 }
-
 

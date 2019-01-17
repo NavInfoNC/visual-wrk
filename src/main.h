@@ -51,14 +51,13 @@ static char *copy_url_part(char *, struct http_parser_url *, enum http_parser_ur
 
 static void statistics_rps(stats *);
 
-//static void print_stats_header();
 static void print_stats(char *, stats *, char *(*)(long double));
 static void print_stats_latency(stats *);
 static void print_stats_requests(stats *);
 static void print_stats_latency_map(stats *);
 static void print_stats_error_code(errors *);
 static void print_result_form();
-static void print_test_parameter(const char*);
+static void print_test_parameter(const char *, char *);
 
 static void print_test_result(struct resultForm *, errors *);
 static void print_result_details(struct resultForm *, errors *);
