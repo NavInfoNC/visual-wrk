@@ -59,11 +59,6 @@ lua_State *script_create(char *file, char *json_file, char *url, char **headers)
         fprintf(stderr, "%s: %s\n", file, cause);
     }
 
-    if (strlen(url) == 0) {
-        size_t len;
-        script_url(L, url, &len);
-    }
-
     (void) luaL_dostring(L, "wrk = require \"wrk\"");
 
     luaL_newmetatable(L, "wrk.addr");
@@ -158,13 +153,6 @@ uint64_t script_delay(lua_State *L) {
     uint64_t delay = lua_tonumber(L, -1);
     lua_pop(L, 1);
     return delay;
-}
-
-void script_url(lua_State *L, char *buf, size_t *len) {
-    lua_getglobal(L, "g_url");
-    const char *str = lua_tolstring(L, -1, len);
-    memcpy(buf, str, *len);
-    lua_pop(L, 1);
 }
 
 void script_request(lua_State *L, char **buf, size_t *len) {

@@ -133,15 +133,12 @@ static void decide_thread_num(struct config *cfg) {
     }
 }
 
-static bool build_test_file(const char *template_path, const char *url) {
+static bool build_test_file(const char *template_path) {
     bool result = false;
     json_error_t error;
     json_t *template_json = json_load_file(template_path, 0, &error);
     if (template_json == NULL)
         goto END;
-
-    if (url != NULL && strlen(url) > 0)
-        json_object_set(template_json, "url", json_string(url));
 
 	const char *p = strrchr(template_path, '/');
 	if (p == NULL || p + 1 == 0)
@@ -158,7 +155,7 @@ END:
     return result;
 }
 
-static bool build_mixed_file(const char *url, char **file_list_link) {
+static bool build_mixed_file(char **file_list_link) {
     bool result = false;
     json_error_t error;
     json_t *template_json = json_load_file(cfg.json_template_file, 0, &error);
@@ -187,7 +184,7 @@ static bool build_mixed_file(const char *url, char **file_list_link) {
             goto END;
         }
 
-        if (!build_test_file(file_path, url)) {
+        if (!build_test_file(file_path)) {
             fprintf(stderr, "build json file failed %s\n", file_path);
             goto END;
         }
@@ -204,11 +201,6 @@ static bool build_mixed_file(const char *url, char **file_list_link) {
 		json_object_set(test_json, "file", json_string(dst_file));
     }
 
-    if (url != NULL && strlen(url) != 0) {
-        if (json_object_set_new_nocheck(template_json, "url", json_string(url)) == -1)
-            goto END;
-    }
-
     if (json_dump_file(template_json, cfg.json_file, JSON_INDENT(4)) == 0)
         result = true;
 
@@ -217,7 +209,7 @@ END:
     return result;
 }
 
-static bool build_test_data(char *url) {
+static bool build_test_data(const char *url) {
     char *p = strrchr(cfg.json_template_file, '/');
     if (p == NULL || p + 1 == 0)
         return false;
@@ -229,9 +221,9 @@ static bool build_test_data(char *url) {
 
     bool result = false;
     if (strncmp(p, "mixed_", strlen("mixed_")) == 0)
-        result = build_mixed_file(url, &file_list_link);
+        result = build_mixed_file(&file_list_link);
     else
-        result = build_test_file(cfg.json_template_file, url);
+        result = build_test_file(cfg.json_template_file);
 
     print_test_parameter(url, file_list_link);
     free(file_list_link);
@@ -240,7 +232,7 @@ static bool build_test_data(char *url) {
 
 int main(int argc, char **argv) {
     thread_concurrency = false;
-    char url[MAX_URL_LENGTH] = {0};
+    char *url = NULL;
     char **headers = zmalloc(argc * sizeof(char *));
     struct http_parser_url parts = {};
 
@@ -261,11 +253,14 @@ int main(int argc, char **argv) {
         goto FAILED;
     }
 
-    if (strlen(url) == 0) {
+    if (url == NULL) {
         const char *wrk_url = getenv("WRK_URL");
-        if (wrk_url != NULL)
-            strncpy(url, wrk_url, strlen(wrk_url));
-    }
+        if (wrk_url == NULL) {
+			fprintf(stderr, "Url Missing!\n");
+			goto FAILED;
+		}
+		aprintf(&url, "%s", wrk_url);
+	}
 
     if (!build_test_data(url))
         goto FAILED;
@@ -434,6 +429,7 @@ int main(int argc, char **argv) {
     return 0;
 
 FAILED:
+	free(url);
     zfree(headers);
     return 1;
 }
