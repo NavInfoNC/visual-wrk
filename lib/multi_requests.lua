@@ -111,11 +111,11 @@ function load_request_objects_from_data()
     mixed_counter["default"] = 1;
   end
 
-  return mixed_requests, mixed_counter, mixed_labels, g_json_data["url"]
+  return mixed_requests, mixed_counter, mixed_labels
 end
 
 -- Load URL requests from file
-g_mixed_requests, g_mixed_counter, g_mixed_labels, g_url = load_request_objects_from_data()
+g_mixed_requests, g_mixed_counter, g_mixed_labels = load_request_objects_from_data()
 
 g_mixed_label_counter = 1
 
