@@ -219,14 +219,16 @@ END:
 
 static bool build_test_data(char *url) {
     char *p = strrchr(cfg.json_template_file, '/');
-    if (p == NULL)
+    if (p == NULL || p + 1 == 0)
         return false;
+	else
+		p++;
 
     char *file_list_link = NULL;
     aprintf(&file_list_link, "<div><a href=\"%s\">%s</a></div>", p, p);
 
     bool result = false;
-    if (strncmp(p + 1, "mixed_", strlen("mixed_")) == 0)
+    if (strncmp(p, "mixed_", strlen("mixed_")) == 0)
         result = build_mixed_file(url, &file_list_link);
     else
         result = build_test_file(cfg.json_template_file, url);
