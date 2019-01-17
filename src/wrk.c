@@ -200,7 +200,7 @@ static bool build_mixed_file(const char *url, char **file_list_link) {
 
 		char dst_file[256];
 		sprintf(dst_file, "%s/%s", JSON_FILE_DIR, p);
-		aprintf(file_list_link, "<div><a href=\"../%s\">%s</a></div>", dst_file, dst_file);
+		aprintf(file_list_link, "<div><a href=\"%s\">%s</a></div>", p, p);
 		json_object_set(test_json, "file", json_string(dst_file));
     }
 
@@ -223,7 +223,7 @@ static bool build_test_data(char *url) {
         return false;
 
     char *file_list_link = NULL;
-    aprintf(&file_list_link, "<div><a href=\"../%s\">%s</a></div>", cfg.json_file, cfg.json_file);
+    aprintf(&file_list_link, "<div><a href=\"%s\">%s</a></div>", p, p);
 
     bool result = false;
     if (strncmp(p + 1, "mixed_", strlen("mixed_")) == 0)
