@@ -143,7 +143,15 @@ static bool build_test_file(const char *template_path, const char *url) {
     if (url != NULL && strlen(url) > 0)
         json_object_set(template_json, "url", json_string(url));
 
-    if (json_dump_file(template_json, cfg.json_file, JSON_INDENT(4)) == 0)
+	const char *p = strrchr(template_path, '/');
+	if (p == NULL || p + 1 == 0)
+		p = template_path;
+	else
+		p++;
+
+    char dst_file[256];
+    sprintf(dst_file, "%s/%s", JSON_FILE_DIR, p);
+    if (json_dump_file(template_json, dst_file, JSON_INDENT(4)) == 0)
         result = true;
 END:
     json_decref(template_json);
@@ -184,17 +192,16 @@ static bool build_mixed_file(const char *url, char **file_list_link) {
             goto END;
         }
 
-        char *p = strrchr(file_path, '/');
-        if (p != NULL && p + 1 != 0) {
-            char *dst_file = NULL;
-            aprintf(&dst_file, "%s/%s", JSON_FILE_DIR, p + 1);
-            aprintf(file_list_link, "<div><a href=\"../%s\">%s</a></div>", dst_file, dst_file);
-            json_object_set(test_json, "file", json_string(dst_file));
-            free(dst_file);
-        } else{
-            fprintf(stderr, "file field(%s) error in %s\n", file_path, cfg.json_template_file);
-            goto END;
-        }
+		const char *p = strrchr(file_path, '/');
+		if (p == NULL || p + 1 == 0)
+			p = file_path;
+		else
+			p++;
+
+		char dst_file[256];
+		sprintf(dst_file, "%s/%s", JSON_FILE_DIR, p);
+		aprintf(file_list_link, "<div><a href=\"../%s\">%s</a></div>", dst_file, dst_file);
+		json_object_set(test_json, "file", json_string(dst_file));
     }
 
     if (url != NULL && strlen(url) != 0) {
