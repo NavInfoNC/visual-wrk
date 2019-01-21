@@ -162,7 +162,7 @@ CpuPerformance *get_cpu_performance(json_t *buffer)
 	cpu_performance->MHz = json_string_value(json_object_get(cpu_json, "MHz"));
 	cpu_performance->coreNum = (int)json_integer_value(json_object_get(cpu_json, "coreNum"));
 
-	json_t *cores_percent_json = json_object_get(cpu_json, "core_percent");
+	json_t *cores_percent_json = json_object_get(cpu_json, "corePercent");
 	if (cores_percent_json != NULL) {
 		cpu_performance->core_percent.count = json_array_size(cores_percent_json);
 		cpu_performance->core_percent.array = (double*)malloc(sizeof(double) * cpu_performance->coreNum * cpu_performance->core_percent.count + 1);
@@ -215,19 +215,19 @@ IoPerformance *get_io_performance(json_t *buffer)
 	IoPerformance *io_performance = (IoPerformance *)malloc(sizeof(IoPerformance));
 	memset(io_performance, 0, sizeof(IoPerformance));
 
-	json_t *read_size_json = json_object_get(io_json, "read_size");
+	json_t *read_size_json = json_object_get(io_json, "readSize");
 	if (read_size_json != NULL)
 		parse_json_array(read_size_json, &io_performance->read_size);
 
-	json_t *write_size_json = json_object_get(io_json, "write_size");
+	json_t *write_size_json = json_object_get(io_json, "writeSize");
 	if (write_size_json != NULL)
 		parse_json_array(write_size_json, &io_performance->write_size);
 
-	json_t *read_count_json = json_object_get(io_json, "read_count");
+	json_t *read_count_json = json_object_get(io_json, "readCount");
 	if (read_count_json != NULL)
 		parse_json_array(read_count_json, &io_performance->read_count);
 
-	json_t *write_count_json = json_object_get(io_json, "write_count");
+	json_t *write_count_json = json_object_get(io_json, "writeCount");
 	if (write_count_json != NULL)
 		parse_json_array(write_count_json, &io_performance->write_count);
 
@@ -267,7 +267,7 @@ DiskInfo **get_disk_info(json_t* buffer, int *disk_num)
 
 		disk_info[i] = (DiskInfo *)malloc(sizeof(DiskInfo));
 		disk_info[i]->device = json_string_value(json_object_get(disk_json, "device"));
-		disk_info[i]->mount_point = json_string_value(json_object_get(disk_json, "mount_point"));
+		disk_info[i]->mount_point = json_string_value(json_object_get(disk_json, "mountPoint"));
 		disk_info[i]->total = json_number_value(json_object_get(disk_json, "total"));
 		disk_info[i]->percent = json_number_value(json_object_get(disk_json, "percent"));
 	}

@@ -235,9 +235,10 @@ int main(int argc, char **argv) {
     char *url = NULL;
     char **headers = zmalloc(argc * sizeof(char *));
     struct http_parser_url parts = {};
+	int ret = 1;
 
     if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
-        goto FAILED;
+        goto END;
 
     system("cp template/* report -rf");
 
@@ -245,32 +246,32 @@ int main(int argc, char **argv) {
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
-        goto FAILED;
+        goto END;
     }
 
-    if (parse_args(&cfg, url, headers, argc, argv)) {
+    if (parse_args(&cfg, &url, headers, argc, argv)) {
         usage();
-        goto FAILED;
+        goto END;
     }
 
     if (url == NULL) {
         const char *wrk_url = getenv("WRK_URL");
         if (wrk_url == NULL) {
 			fprintf(stderr, "Url Missing!\n");
-			goto FAILED;
+			goto END;
 		}
 		aprintf(&url, "%s", wrk_url);
 	}
 
     if (!build_test_data(url))
-        goto FAILED;
+        goto END;
 
     decide_thread_num(&cfg);
 
     lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
     if (strlen(url) == 0 || !script_parse_url(url, &parts)) {
         fprintf(stderr, "invalid URL: %s\n", url);
-        goto FAILED;
+        goto END;
     }
     char *schema  = copy_url_part(url, &parts, UF_SCHEMA);
     char *host    = copy_url_part(url, &parts, UF_HOST);
@@ -280,7 +281,7 @@ int main(int argc, char **argv) {
     if (!script_resolve(L, host, service)) {
         char *msg = strerror(errno);
         fprintf(stderr, "unable to connect to %s:%s %s\n", host, service, msg);
-        goto FAILED;
+        goto END;
     }
 
     cfg.host = host;
@@ -295,7 +296,7 @@ int main(int argc, char **argv) {
         if ((cfg.ctx = ssl_init()) == NULL) {
             fprintf(stderr, "unable to initialize SSL\n");
             ERR_print_errors_fp(stderr);
-            goto FAILED;
+            goto END;
         }
         sock.connect  = ssl_connect;
         sock.close    = ssl_close;
@@ -334,7 +335,7 @@ int main(int argc, char **argv) {
         if (!t->loop || pthread_create(&t->thread, NULL, &thread_main, t)) {
             char *msg = strerror(errno);
             fprintf(stderr, "unable to create thread %"PRIu64": %s\n", i, msg);
-            goto FAILED;
+            goto END;
         }
     }
 
@@ -421,17 +422,16 @@ int main(int argc, char **argv) {
         script_done(L, statistics.latency, statistics.requests);
     }
 
-
     clear_unused_variable();
     save_template("report/log.html", g_html_template, strlen(g_html_template));
-    free(g_html_template);
+	ret = 0;
 
-    return 0;
-
-FAILED:
+END:
 	free(url);
     zfree(headers);
-    return 1;
+    free(g_html_template);
+
+    return ret;
 }
 
 void *thread_main(void *arg) {
@@ -730,7 +730,7 @@ static struct option longopts[] = {
     { NULL,          0,                 NULL,  0  }
 };
 
-static int parse_args(struct config *cfg, char *url, char **headers, int argc, char **argv) {
+static int parse_args(struct config *cfg, char **url, char **headers, int argc, char **argv) {
     char **header = headers;
     int c;
 
@@ -798,7 +798,7 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
             return -1;
         }
 
-        aprintf(&url, "%s", argv[optind]);
+        aprintf(url, "%s", argv[optind]);
     }
 
     *header = NULL;
@@ -1174,7 +1174,7 @@ static void print_io_percent(json_t *json, uint64_t start_time) {
         double write_size = i != 0 ? ioPerformance->write_size.array[i] - ioPerformance->write_size.array[i - 1] : 0;
         int read_count = i != 0 ? ioPerformance->read_count.array[i] - ioPerformance->read_count.array[i - 1] : 0;
         int write_count = i != 0 ? ioPerformance->write_count.array[i] - ioPerformance->write_count.array[i - 1] : 0;
-        aprintf(&performance_data, "\n{\"date\":\"%s\", \"read_size\":%lf, \"write_size\":%lf, \"read_count\":%d, \"write_count\":%d},", 
+        aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
                 timeArray, read_size, write_size, read_count, write_count);
     }
 

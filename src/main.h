@@ -46,7 +46,7 @@ static int response_body(http_parser *, const char *, size_t);
 
 static uint64_t time_us();
 
-static int parse_args(struct config *, char *, char **, int, char **);
+static int parse_args(struct config *, char **, char **, int, char **);
 static char *copy_url_part(char *, struct http_parser_url *, enum http_parser_url_fields);
 
 static void statistics_rps(stats *);
