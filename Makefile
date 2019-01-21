@@ -25,13 +25,11 @@ VER  ?= $(shell git describe --tags --always --dirty)
 ODIR := obj
 OBJ  := $(patsubst %.c,$(ODIR)/%.o,$(SRC)) $(ODIR)/bytecode.o $(ODIR)/version.o
 LIBS := -lluajit-5.1 $(LIBS)
-LIBS := -ljansson_linux_x64 $(LIBS)
+LIBS := -ljansson $(LIBS)
 LIBS := -lcurl $(LIBS)
 
 DEPS    :=
 CFLAGS  += -I$(ODIR)/include
-CFLAGS  += -I../navicore-lib/include
-LDFLAGS += -L../navicore-lib/lib/Release
 LDFLAGS += -L$(ODIR)/lib
 
 ifneq ($(WITH_LUAJIT),)
@@ -47,6 +45,14 @@ ifneq ($(WITH_OPENSSL),)
 	LDFLAGS += -L$(WITH_OPENSSL)/lib
 else
 	DEPS += $(ODIR)/lib/libssl.a
+endif
+
+ifneq ($(WITH_JANSSON),)
+	CFLAGS  += -I$(WITH_JANSSON)/include
+	LDFLAGS += -L$(WITH_JANSSON)/lib
+else
+	CFLAGS  += -I$(ODIR)/include/
+	DEPS += $(ODIR)/lib/libjansson.a
 endif
 
 ifeq ($(PREFIX),)
@@ -91,6 +97,7 @@ $(ODIR)/%.o : %.c
 
 LUAJIT  := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/LuaJIT*.tar.gz)))
 OPENSSL := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/openssl*.tar.gz)))
+JANSSON := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/jansson*.tar.gz)))
 
 OPENSSL_OPTS = no-shared no-psk no-srp no-dtls no-idea --prefix=$(abspath $(ODIR))
 
@@ -99,6 +106,19 @@ $(ODIR)/$(LUAJIT):  deps/$(LUAJIT).tar.gz  | $(ODIR)
 
 $(ODIR)/$(OPENSSL): deps/$(OPENSSL).tar.gz | $(ODIR)
 	@tar -C $(ODIR) -xf $<
+
+$(ODIR)/$(JANSSON): deps/$(JANSSON).tar.gz | $(ODIR)
+	@tar -C $(ODIR) -xf $<
+	
+$(ODIR)/lib/libjansson.a: $(ODIR)/$(JANSSON)
+	@echo Building Jansson...
+ifeq ($(TARGET), darwin)
+	@$(SHELL) -c "cd $< && ./Configure darwin64-x86_64-cc"
+else
+	@$(SHELL) -c "cd $< && ./configure --prefix=$(abspath $(ODIR))"
+endif
+	@$(MAKE) -C $< BUILDMODE=static install
+	@cd $(ODIR)/lib && rm libjansson*.so
 
 $(ODIR)/lib/libluajit-5.1.a: $(ODIR)/$(LUAJIT)
 	@echo Building LuaJIT...

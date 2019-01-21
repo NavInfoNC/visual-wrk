@@ -178,7 +178,7 @@ static bool build_mixed_file(char **file_list_link) {
             goto END;
         }
 
-        const char *file_path = json_string_value_of_name(test_json, "file");
+        const char *file_path = json_string_value(json_object_get(test_json, "file"));
         if (file_path == NULL) {
             fprintf(stderr, "cannot get file field in %s\n", cfg.json_template_file);
             goto END;
@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
     cfg.host = host;
 
     CollectConfig collectCfg;
-    collectCfg.result  = startCollecting(cfg.host, cfg.duration, cfg.interval, NULL, collectCfg.hash_string);
+    collectCfg.result  = start_collecting(cfg.host, cfg.duration, cfg.interval, NULL, collectCfg.hash_string);
     if (!collectCfg.result)
         fprintf(stderr, "start collecting failed");
     collectCfg.start_time = time(NULL);
@@ -406,11 +406,11 @@ int main(int argc, char **argv) {
     print_result_form();
 
     if (collectCfg.result) {
-        json_t* responseJson = stopCollecting(cfg.host, collectCfg.hash_string);
+        json_t* responseJson = stop_collecting(cfg.host, collectCfg.hash_string);
         if (responseJson != NULL)
             print_dstServerPerformance(&collectCfg, responseJson);
         else
-            printf("stopCollecting failed\n");
+            printf("stop_collecting failed\n");
 
         json_decref(responseJson);
     }
@@ -798,7 +798,7 @@ static int parse_args(struct config *cfg, char *url, char **headers, int argc, c
             return -1;
         }
 
-        memcpy(url, argv[optind], strlen(argv[optind]));
+        aprintf(&url, "%s", argv[optind]);
     }
 
     *header = NULL;
@@ -1099,8 +1099,8 @@ static void print_result_details(struct resultForm *o, errors *errors) {
     record_html_log("${result_details}", buff);
 }
 
-static void print_cpu_percent(json_t* json, uint64_t start_time) {
-    CpuPerformance* cpu_performance = getCpuPerformance(json);
+static void print_cpu_percent(json_t *json, uint64_t start_time) {
+    CpuPerformance *cpu_performance = get_cpu_performance(json);
     if (cpu_performance == NULL)
         return;
 
@@ -1116,7 +1116,7 @@ static void print_cpu_percent(json_t* json, uint64_t start_time) {
         for (int j = 0; j < cpu_performance->coreNum; j++) {
             int offset = strlen(format_string);
             int index = i * cpu_performance->coreNum + j;
-            sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpu_performance->corePercent.array[index]);
+            sprintf(format_string + offset, ", \"cpu%d\":%lf", j, cpu_performance->core_percent.array[index]);
         }
         strcat(format_string, "},");
 
@@ -1133,59 +1133,59 @@ static void print_cpu_percent(json_t* json, uint64_t start_time) {
     record_html_log("${cpu_chart_div}", "<div id=\"cpu_chart\"></div>");
     record_html_log("${cpu_chart_data}", performance_data);
     record_html_log("${general_info_data}", general_info_data);
-    releaseCpuPerformance(cpu_performance);
+    release_cpu_performance(cpu_performance);
     free(performance_data);
     free(general_info_data);
 }
 
-static void print_mem_percent(json_t* json, uint64_t start_time) {
-    MemPerformance* memPerformance = getMemPerformance(json);
-    if (memPerformance == NULL)
+static void print_mem_percent(json_t *json, uint64_t start_time) {
+    MemPerformance *mem_performance = get_mem_performance(json);
+    if (mem_performance == NULL)
         return;
 
     char *performance_data = NULL;
     char timeArray[40];
-    int count = memPerformance->percent.count;
+    int count = mem_performance->percent.count;
     for (uint64_t i = 0; i < count; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
         aprintf(&performance_data, "\n{\"date\":\"%s\", \"mem\":%lf},",
-                timeArray, memPerformance->percent.array[i]);
+                timeArray, mem_performance->percent.array[i]);
     }
 
     record_html_log("${mem_chart_div}", "<div id=\"mem_chart\"></div>");
     record_html_log("${mem_chart_data}", performance_data);
-    releaseMemPerformance(memPerformance);
+    release_mem_performance(mem_performance);
     free(performance_data);
 }
 
-static void print_io_percent(json_t* json, uint64_t start_time) {
-    IoPerformance* ioPerformance = getIoPerformance(json);
+static void print_io_percent(json_t *json, uint64_t start_time) {
+    IoPerformance* ioPerformance = get_io_performance(json);
     if (ioPerformance == NULL)
         return;
 
     char *performance_data = NULL;
     char timeArray[40];
-    int count = ioPerformance->readSize.count;
+    int count = ioPerformance->read_size.count;
     for (int i = 0; i < count - 1; i++) {
         time_t time = start_time + i * cfg.interval;
         strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
-        double readSize = i != 0 ? ioPerformance->readSize.array[i] - ioPerformance->readSize.array[i - 1] : 0;
-        double writeSize = i != 0 ? ioPerformance->writeSize.array[i] - ioPerformance->writeSize.array[i - 1] : 0;
-        int readCount = i != 0 ? ioPerformance->readCount.array[i] - ioPerformance->readCount.array[i - 1] : 0;
-        int writeCount = i != 0 ? ioPerformance->writeCount.array[i] - ioPerformance->writeCount.array[i - 1] : 0;
-        aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
-                timeArray, readSize, writeSize, readCount, writeCount);
+        double read_size = i != 0 ? ioPerformance->read_size.array[i] - ioPerformance->read_size.array[i - 1] : 0;
+        double write_size = i != 0 ? ioPerformance->write_size.array[i] - ioPerformance->write_size.array[i - 1] : 0;
+        int read_count = i != 0 ? ioPerformance->read_count.array[i] - ioPerformance->read_count.array[i - 1] : 0;
+        int write_count = i != 0 ? ioPerformance->write_count.array[i] - ioPerformance->write_count.array[i - 1] : 0;
+        aprintf(&performance_data, "\n{\"date\":\"%s\", \"read_size\":%lf, \"write_size\":%lf, \"read_count\":%d, \"write_count\":%d},", 
+                timeArray, read_size, write_size, read_count, write_count);
     }
 
     record_html_log("${io_chart_div}", "<div id=\"io_chart\"></div>");
     record_html_log("${io_chart_data}", performance_data);
-    releaseIoPerformance(ioPerformance);
+    release_io_performance(ioPerformance);
     free(performance_data);
 }
 
-static void print_platform_info(json_t* json) {
-    PlatformInfo* platform_info = getPlatformInfo(json);
+static void print_platform_info(json_t *json) {
+    PlatformInfo* platform_info = get_platform_info(json);
     if (platform_info == NULL)
         return;
 
@@ -1193,32 +1193,32 @@ static void print_platform_info(json_t* json) {
     aprintf(&platform_info_data, "hostname:%s\nsystem:%s\nrelease:%s\ndistribution:%s\n", platform_info->hostname,
             platform_info->system, platform_info->release, platform_info->distribution);
     record_html_log("${platform_info_data}", platform_info_data);
-    releasePlatformInfo(platform_info);
+    release_platform_info(platform_info);
     free(platform_info_data);
 }
 
-static void print_disk_info(json_t* json) {
+static void print_disk_info(json_t *json) {
     int disk_num = 0;
-    DiskInfo** disk_info = getDiskInfo(json, &disk_num);
+    DiskInfo **disk_info = get_disk_info(json, &disk_num);
     if (disk_info == NULL)
         return;
 
     char* disk_info_data = NULL;
     for (int i = 0; i < disk_num; i++)
     {
-        aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mountPoint, 
+        aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mount_point, 
                 disk_info[i]->percent, disk_info[i]->total);
     }
     record_html_log("${disk_info_data}", disk_info_data);
-    releaseDiskInfo(disk_info, disk_num);
+    release_disk_info(disk_info, disk_num);
     free(disk_info_data);
 }
 
-static void print_dstServerPerformance(CollectConfig* collectCfg, json_t* bufferJson) {
-    print_cpu_percent(bufferJson, collectCfg->start_time);
-    print_mem_percent(bufferJson, collectCfg->start_time);
-    print_io_percent(bufferJson, collectCfg->start_time);
-    print_disk_info(bufferJson);
-    print_platform_info(bufferJson);
+static void print_dstServerPerformance(CollectConfig *collectCfg, json_t *buffer_json) {
+    print_cpu_percent(buffer_json, collectCfg->start_time);
+    print_mem_percent(buffer_json, collectCfg->start_time);
+    print_io_percent(buffer_json, collectCfg->start_time);
+    print_disk_info(buffer_json);
+    print_platform_info(buffer_json);
 }
 

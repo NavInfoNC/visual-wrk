@@ -62,8 +62,8 @@ static void print_test_parameter(const char *, char *);
 static void print_test_result(struct resultForm *, errors *);
 static void print_result_details(struct resultForm *, errors *);
 
-static void print_disk_info(json_t* json);
-static void print_platform_info(json_t* json);
+static void print_disk_info(json_t *json);
+static void print_platform_info(json_t *json);
 
 typedef struct CollectConfig {
 	uint64_t start_time;
