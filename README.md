@@ -8,19 +8,29 @@ Another HTTP load tester. Features HTML based report(including charts), dynamic 
 
   This runs a benchmark for 30 seconds, using 12 threads, and keeping
   400 HTTP connections open.
+  Output a log.html in report/ directory.
 
+    export WRK_URL=http://127.0.0.1:8080 
+    wrk -t12 -c400 -d30s -j data.json --latency
+
+  This runs a benchmark for data.json, print detailed latency statistics.
   Output a log.html in report/ directory.
 
 ## Command Line Options
 
-    -c, --connections: total number of HTTP connections to keep open with
+    -c, --connections: Total number of HTTP connections to keep open with
                        each thread handling N = connections/threads
 
     -d, --duration:    duration of the test, e.g. 2s, 2m, 2h
 
+    -i, --interval     request sampling interval  
+
+    -j, --json         load json data for script
+
     -t, --threads:     total number of threads to use
 
-    -s, --script:      LuaJIT script, see SCRIPTING
+    -s, --script:      LuaJIT script, see SCRIPTING. If not specified, the 
+                       default is to use the multi_requests.lua
 
     -H, --header:      HTTP header to add to request, e.g. "User-Agent: wrk"
 
@@ -30,41 +40,16 @@ Another HTTP load tester. Features HTML based report(including charts), dynamic 
                        this amount of time.
 
 ## Benchmarking Tips
-
-  The machine running wrk must have a sufficient number of ephemeral ports
-  available and closed sockets should be recycled quickly. To handle the
-  initial connection burst the server's listen(2) backlog should be greater
-  than the number of concurrent connections being tested.
-
-  A user script that only changes the HTTP method, path, adds headers or
-  a body, will have no performance impact. Per-request actions, particularly
-  building a new HTTP request, and use of response() will necessarily reduce
-  the amount of load that can be generated.
+ 
+  The software is developed on the basis of WRK;
+  Reduce the delay caused by loading files; 
+  Support mass random pressure test;
+  Support mixed pressure measurement with different weights; 
+  Support visual presentation of test results;
+  Support integration with Jenkins HTML report;
+  Support the collection and display of server performance.
 
 ## Acknowledgements
 
-  wrk contains code from a number of open source projects including the
-  'ae' event loop from redis, the nginx/joyent/node.js 'http-parser',
-  and Mike Pall's LuaJIT. Please consult the NOTICE file for licensing
-  details.
-
-## Cryptography Notice
-
-  This distribution includes cryptographic software. The country in
-  which you currently reside may have restrictions on the import,
-  possession, use, and/or re-export to another country, of encryption
-  software. BEFORE using any encryption software, please check your
-  country's laws, regulations and policies concerning the import,
-  possession, or use, and re-export of encryption software, to see if
-  this is permitted. See <http://www.wassenaar.org/> for more
-  information.
-
-  The U.S. Government Department of Commerce, Bureau of Industry and
-  Security (BIS), has classified this software as Export Commodity
-  Control Number (ECCN) 5D002.C.1, which includes information security
-  software using or performing cryptographic functions with symmetric
-  algorithms. The form and manner of this distribution makes it
-  eligible for export under the License Exception ENC Technology
-  Software Unrestricted (TSU) exception (see the BIS Export
-  Administration Regulations, Section 740.13) for both object code and
-  source code.
+  Visual-wrk is secondary development project based on WRK, and add jansson 
+  library. Please consult the NOTICE file for licensing details.
