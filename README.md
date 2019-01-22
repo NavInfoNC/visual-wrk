@@ -42,11 +42,17 @@ Another HTTP load tester. Features HTML based report(including charts), dynamic 
 ## Benchmarking Tips
  
   The software is developed on the basis of WRK;
+ 
   Reduce the delay caused by loading files; 
+
   Support mass random pressure test;
+ 
   Support mixed pressure measurement with different weights; 
+ 
   Support visual presentation of test results;
+ 
   Support integration with Jenkins HTML report;
+ 
   Support the collection and display of server performance.
 
 ## Acknowledgements
