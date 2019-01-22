@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Rreport for Performance Test</title>
+        <script src="js/Chart.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/github.css">
+        <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+        <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+        <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+        <style>#rps_chart {width: 100%; height : 500px;}</style>
+        <style>#cpu_chart {width: 100%; height : 500px;}</style>
+        <style>#mem_chart {width: 100%; height : 500px;}</style>
+        <style>#io_chart {width: 100%; height : 500px;}</style>
+    </head>
+    <body>
+        <div class="container">
+            <div id="markup">
+                <article id="content" class="markdown-body">
+                    <div class="document">
+                        <div class="section" id="test-case">
+                            <h1>LOAD TEST REPORT</h1>
+                            <div class="section" id="test-parameter">
+                                <h2>TEST PARAMETER:</h2>
+                                <pre class="codehilite">Test case file: ${file_list_link}</pre>
+                                <pre class="codehilite">${test_content}</pre>
+                            </div>
+                            <div class="section" id="test-result">
+                                <h2>TEST RESULT:</h2>
+                                <pre class="codehilite">${test_result}</pre>
+                                <pre class="codehilite">${result_details}</pre>
+                                <pre class="codehilite">${error_codes}</pre>
+                                <pre class="codehilite">${latency_distribution}</pre>
+                                <pre class="codehilite">${requests_frequency}
+                                ${rps_chart_div}
+                                </pre>
+                                <pre class="codehilite">Latency Chart
+                                    <canvas id="latencyChart" width="400" height="225"></canvas>
+                                    <script>var latencyCtx = document.getElementById("latencyChart").getContext('2d');</script>
+                                </pre>
+                                <table border="1" class="docutils">
+                                    <colgroup>
+                                        <col width="10%" />
+                                        <col width="10%" />
+                                        <col width="12%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="10%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="7%" />
+                                        <col width="10%" />
+                                    </colgroup>
+                                    <thead valign="bottom">
+                                        <tr><th class="head" rowspan="2">并发数</th>
+                                            <th class="head" rowspan="2">压力时间</th>
+                                            <th class="head" rowspan="2">吞吐率</th>
+                                            <th class="head" rowspan="2">RPS</th>
+                                            <th class="head" colspan="4">响应时间</th>
+                                            <th class="head" colspan="4">RPS</th>
+                                        </tr>
+                                        <tr><th class="head">avg</th>
+                                            <th class="head">max</th>
+                                            <th class="head">stdev</th>
+                                            <th class="head">+/-stdev</th>
+                                            <th class="head">avg</th>
+                                            <th class="head">max</th>
+                                            <th class="head">stdev</th>
+                                            <th class="head">+/-stdev</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody valign="top" style="font-size:80%">
+                                        <tr><td>${concurrency}</td>
+                                            <td>${duration}</td>
+                                            <td>${tps}</td>
+                                            <td>${rps}</td>
+                                            <td>${latency_avg}</td>
+                                            <td>${latency_max}</td>
+                                            <td>${latency_stdev}</td>
+                                            <td>${latency_PorNstdev}</td>
+                                            <td>${rps_avg}</td>
+                                            <td>${rps_max}</td>
+                                            <td>${rps_stdev}</td>
+                                            <td>${rps_PorNstdev}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <h2>SERVER INFO</h2>
+                                <div style="display:inline-block;width:33%;vertical-align:top;">
+                                    <h5>Platform Info</h5>                                    
+                                    <pre class="codehilite" style="white-space: pre-wrap">${platform_info_data}</pre>
+                                </div>                                                        
+                                <div style="display:inline-block;width:33%;vertical-align:top;">
+                                    <h5>General Info</h5>                                     
+                                    <pre class="codehilite" style="white-space: pre-wrap">${general_info_data}</pre>
+                                </div>                                                        
+                                <div style="display:inline-block;width:33%;vertical-align:top;">
+                                    <h5>Disk Info</h5>
+                                    <pre class="codehilite" style="white-space: pre-wrap">${disk_info_data}</pre>
+                                </div>
+                            </div>
+                            <div>
+                                <h2>SERVER PERFORMANCE:</h2>
+                                <pre class="codehilite">
+                                    ${cpu_chart_div}
+                                    ${mem_chart_div}
+                                    ${io_chart_div}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </body>
+    <script type="text/x-omnimarkup-config">
+window.App.Context = {
+        buffer_id: 76,
+        timestamp: '1529398978.38716',
+        revivable_key: 'QzpcVXNlcnNcemhhb2dxXERlc2t0b3BcbG9nLnJzdA=='
+    };
+    window.App.Options = {
+        ajax_polling_interval: 500,
+        mathjax_enabled: false
+    };
+    </script>
+    <script>
+var latencyChart = new Chart(latencyCtx, {
+    type: 'bar',
+    data: {
+        ${latency_chart_label},
+        datasets: [
+        {
+            label: 'Number of Requests',
+            ${latency_chart_data},
+            borderWidth: 1,
+            type: "bar",
+            borderColor: '#0000FF',
+            backgroundColor: '#00FFFF',
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                scaleLabel: {
+                    display: true,
+                    labelString: 'Number of Requests'
+                }
+            }],
+            xAxes: [{
+                scaleLabel: {
+                    display: true,
+                    labelString: 'Response Time'
+                }
+            }]
+        }
+    }
+});
+    </script>
+    <script type="text/javascript">
+function generateGraph(id, text, units) {
+    return {
+        "id": id,
+        "balloonText": text + ": [[value]]" + units,
+        "bullet": "round",
+        "bulletBorderAlpha": 1,
+        "bulletColor": "#FFFFFF",
+        "hideBulletsCount": 50,
+        "title": text  + " ",
+        "valueField": text,
+        "useLineColorForBulletBorder": true,
+    }
+}
+
+function makeChartStyle(dataProvider, chartType) {
+    var graphs = []
+    var unit = ""
+    if ("rps_chart" == chartType) {
+        unit = "rps"
+        graphs.push(generateGraph("g1", "requests", unit))
+        graphs.push(generateGraph("g2", "success", unit))
+    } else if ("cpu_chart" == chartType) {
+        unit = "%"
+        graphs.push(generateGraph("g1", "cpu", unit))
+        for (var i = 0; i < ${cpu_num}; i++) {
+            var id = i + 1
+            graphs.push(generateGraph("g"+id, "cpu"+i, unit))
+        }
+    } else if ("mem_chart" == chartType) {
+        unit = "%"
+        graphs.push(generateGraph("id", "mem", unit))
+    } else if ("io_chart" == chartType) {
+        graphs.push(generateGraph("g1", "readSize", "MB"))
+        graphs.push(generateGraph("g2", "writeSize", "MB"))
+        graphs.push(generateGraph("g3", "readCount", ""))
+        graphs.push(generateGraph("g4", "writeCount", ""))
+    }
+    return {
+        "type": "serial",
+        "theme": "light",
+        "marginRight": 80,
+        "autoMarginOffset": 20,
+        "marginTop": 7,
+        "legend": {
+            "align": "center",
+            "equalWidths": false,
+            "valueAlign": "left",
+            "valueWidth": 100,
+            "valueText": " "
+        },
+        "dataProvider": dataProvider,
+        "valueAxes": [{
+            "axisAlpha": 0.2,
+            "dashLength": 1,
+            "position": "left",
+            "unit": unit
+        }],
+        "mouseWheelZoomEnabled": true,
+        "dataDateFormat": "YYYY-MM-DD HH:NN:SS",
+        "graphs":graphs,
+        "chartScrollbar": {
+            "autoGridCount": true,
+            "graph": "g1",
+            "scrollbarHeight": 40,
+            "selectedBackgroundColor":"#888888",
+            "graphFillAlpha":0,
+            "autoGridCount":true,
+            "selectedGraphFillAlpha":0,
+            "graphLineAlpha":0.8,
+            "graphLineColor":"#c2c2c2",
+            "selectedGraphLineColor":"#888888",
+            "selectedGraphLineAlpha":1
+        },
+        "chartCursor": {
+            "limitToGraph":"g1",
+            "categoryBalloonDateFormat":"HH:NN:SS"
+        },
+        "categoryField": "date",
+        "categoryAxis": {
+            "parseDates": true,
+            "minPeriod" : "ss",
+            "axisColor": "#DADADA",
+            "dashLength": 1,
+            "minorGridEnabled": true
+        },
+        "export": {
+            "enabled": true
+        }
+    };
+}
+function makeChart(chartData, chartType) {
+    var chartStyle = makeChartStyle(chartData, chartType);
+    var chart = AmCharts.makeChart(chartType, chartStyle);
+    chart.addListener("rendered", zoomChart);
+
+    // this method is called when chart is first inited as we listen for "rendered" event
+    function zoomChart() {
+        chart.zoomOut();
+    }
+}
+
+var rpsChartData = [${rps_chart_data}];
+var cpuChartData = [${cpu_chart_data}];
+var memChartData = [${mem_chart_data}];
+var ioChartData = [${io_chart_data}];
+makeChart(rpsChartData, "rps_chart")
+makeChart(cpuChartData, "cpu_chart")
+makeChart(memChartData, "mem_chart")
+makeChart(ioChartData, "io_chart")
+    </script>
+</html>
+
