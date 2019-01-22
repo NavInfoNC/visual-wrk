@@ -3,7 +3,6 @@ wrk
 cscope.*
 tags
 log.html
-data/
 deps/LuaJIT-2.1.0-beta3/
 report/
 visual-wrk

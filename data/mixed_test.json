@@ -1,0 +1,20 @@
+{
+    "mixed_test":
+    [
+        {
+            "label":"get",
+            "file": "data/method_get.json",
+            "weight": "1"
+        },
+        {
+            "label":"post",
+            "file": "data/method_post.json",
+            "weight": "2"
+        },
+        {
+            "label":"post_base64",
+            "file": "data/method_post_base64.json",
+            "weight": "3"
+        }
+    ]
+}
