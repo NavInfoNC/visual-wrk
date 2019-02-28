@@ -263,8 +263,10 @@ int main(int argc, char **argv) {
 		aprintf(&url, "%s", wrk_url);
 	}
 
-    if (!build_test_data(url))
-        goto END;
+	if (cfg.json_template_file != NULL) {
+        if (!build_test_data(url))
+			goto END;
+    }
 
     decide_thread_num(&cfg);
 
