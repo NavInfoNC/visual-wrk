@@ -24,7 +24,7 @@
 #include "stats.h"
 #include "units.h"
 #include "zmalloc.h"
-#include "jansson/jansson.h"
+#include "jansson.h"
 
 struct config;
 struct resultForm;

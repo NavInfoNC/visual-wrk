@@ -511,21 +511,24 @@ static int reconnect_socket(thread *thread, connection *c) {
 
 static int record_rate(aeEventLoop *loop, long long id, void *data) {
     thread *thread = data;
+    uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
+    time_interval = cfg.duration > time_interval ? time_interval : cfg.duration - 1;
+
     if (thread->succ > 0) {
-        uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
         stats_record_requests_per_sec(statistics.requests, false, thread->succ, time_interval);
         thread->succ = 0;
     }
 
     if (thread->requests > 0) {
-        uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
-        stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
-
+		stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
         thread->requests = 0;
-        thread->start    = time_us();
+		thread->start    = time_us();
     }
 
-    if (stop) aeStop(loop);
+    if (stop) {
+		stats_output_request_num(statistics.requests, time_interval + 1);
+		aeStop(loop);
+	}
 
     return RECORD_INTERVAL_MS;
 }
@@ -569,7 +572,7 @@ static int response_complete(http_parser *parser) {
     uint64_t now = time_us();
     int status = parser->status_code;
 
-    thread->complete++;
+	thread->complete++;
     thread->requests++;
 
     if (status > 399) {

@@ -55,6 +55,14 @@ else
 	DEPS += $(ODIR)/lib/libjansson.a
 endif
 
+ifneq ($(WITH_CURL),)
+	CFLAGS  += -I$(WITH_CURL)/include
+	LDFLAGS += -L$(WITH_CURL)/lib
+else
+	CFLAGS  += -I$(ODIR)/include/
+	DEPS += $(ODIR)/lib/libcurl.a
+endif
+
 ifeq ($(PREFIX),)
 	INSTALL_PREFIX = /usr/local
 endif
@@ -98,6 +106,7 @@ $(ODIR)/%.o : %.c
 LUAJIT  := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/LuaJIT*.tar.gz)))
 OPENSSL := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/openssl*.tar.gz)))
 JANSSON := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/jansson*.tar.gz)))
+CURL := $(notdir $(patsubst %.tar.gz,%,$(wildcard deps/curl*.tar.gz)))
 
 OPENSSL_OPTS = no-shared no-psk no-srp no-dtls no-idea --prefix=$(abspath $(ODIR))
 
@@ -107,8 +116,20 @@ $(ODIR)/$(LUAJIT):  deps/$(LUAJIT).tar.gz  | $(ODIR)
 $(ODIR)/$(OPENSSL): deps/$(OPENSSL).tar.gz | $(ODIR)
 	@tar -C $(ODIR) -xf $<
 
+$(ODIR)/$(CURL): deps/$(CURL).tar.gz | $(ODIR)
+	@tar -C $(ODIR) -xf $<
+
 $(ODIR)/$(JANSSON): deps/$(JANSSON).tar.gz | $(ODIR)
 	@tar -C $(ODIR) -xf $<
+
+$(ODIR)/lib/libcurl.a: $(ODIR)/$(CURL)
+	@echo Building curl...
+ifeq ($(TARGET), darwin)
+	@$(SHELL) -c "cd $< && ./Configure darwin64-x86_64-cc"
+else
+	@$(SHELL) -c "cd $< && ./configure --prefix=$(abspath $(ODIR))"
+endif
+	@$(MAKE) -C $< BUILDMODE=static install
 	
 $(ODIR)/lib/libjansson.a: $(ODIR)/$(JANSSON)
 	@echo Building Jansson...
