@@ -22,7 +22,7 @@ Dependencies
 
   For example to use the system version of both libraries on Linux:
 
-    make WITH_LUAJIT=/usr WITH_OPENSSL=/usr
+    make WITH_LUAJIT=/usr WITH_OPENSSL=/usr WITH_JANSSON=/usr WITH_CURL=/usr
 
   Or to use the Homebrew version of OpenSSL on Mac OS X:
 
