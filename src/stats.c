@@ -36,7 +36,7 @@ int stats_record(stats *stats, uint64_t n) {
     return 1;
 }
 
-static void realtime_output_request_num(stats *stats, uint64_t sec) {
+void stats_output_request_num(stats *stats, uint64_t sec) {
     static volatile long start = 0;
     static uint64_t last_sec = 0;
     if (start == 0 && __sync_lock_test_and_set(&start, 1) == 0) {
@@ -55,7 +55,7 @@ int stats_record_requests_per_sec(stats *stats, bool type, uint64_t requests_num
 
     if (type) {
         __sync_fetch_and_add(&stats->requests[sec], requests_num);
-        realtime_output_request_num(stats, sec);
+        stats_output_request_num(stats, sec);
     }else
         __sync_fetch_and_add(&stats->success[sec], requests_num);
 

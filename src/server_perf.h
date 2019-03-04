@@ -1,7 +1,7 @@
 #ifndef SERVER_PERF_H
 #define SERVER_PERF_H
 
-#include "jansson/jansson.h"
+#include "jansson.h"
 
 typedef enum PerformanceType
 {

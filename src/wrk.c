@@ -140,11 +140,11 @@ static bool build_test_file(const char *template_path) {
     if (template_json == NULL)
         goto END;
 
-	const char *p = strrchr(template_path, '/');
-	if (p == NULL || p + 1 == 0)
-		p = template_path;
-	else
-		p++;
+    const char *p = strrchr(template_path, '/');
+    if (p == NULL || p + 1 == 0)
+        p = template_path;
+    else
+        p++;
 
     char dst_file[256];
     sprintf(dst_file, "%s/%s", JSON_FILE_DIR, p);
@@ -257,14 +257,16 @@ int main(int argc, char **argv) {
     if (url == NULL) {
         const char *wrk_url = getenv("WRK_URL");
         if (wrk_url == NULL) {
-			fprintf(stderr, "Url Missing!\n");
-			goto END;
-		}
-		aprintf(&url, "%s", wrk_url);
-	}
+            fprintf(stderr, "Url Missing!\n");
+            goto END;
+        }
+        aprintf(&url, "%s", wrk_url);
+    }
 
-    if (!build_test_data(url))
-        goto END;
+    if (cfg.json_template_file != NULL) {
+        if (!build_test_data(url))
+            goto END;
+    }
 
     decide_thread_num(&cfg);
 
@@ -511,21 +513,24 @@ static int reconnect_socket(thread *thread, connection *c) {
 
 static int record_rate(aeEventLoop *loop, long long id, void *data) {
     thread *thread = data;
+    uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
+    time_interval = cfg.duration > time_interval ? time_interval : cfg.duration - 1;
+
     if (thread->succ > 0) {
-        uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
         stats_record_requests_per_sec(statistics.requests, false, thread->succ, time_interval);
         thread->succ = 0;
     }
 
     if (thread->requests > 0) {
-        uint64_t time_interval = (time_us() - start_thread_time) / 1000 / 1000;
-        stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
-
+		stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
         thread->requests = 0;
         thread->start    = time_us();
     }
 
-    if (stop) aeStop(loop);
+    if (stop) {
+        stats_output_request_num(statistics.requests, time_interval + 1);
+        aeStop(loop);
+    }
 
     return RECORD_INTERVAL_MS;
 }
