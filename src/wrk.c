@@ -211,10 +211,10 @@ END:
 
 static bool build_test_data(const char *url) {
     char *p = strrchr(cfg.json_template_file, '/');
-    if (p == NULL || p + 1 == 0)
-        return false;
-	else
-		p++;
+    if (p == NULL)
+        p = cfg.json_template_file;
+    else
+        p++;
 
     char *file_list_link = NULL;
     aprintf(&file_list_link, "<div><a href=\"%s\">%s</a></div>", p, p);
@@ -763,7 +763,11 @@ static int parse_args(struct config *cfg, char **url, char **headers, int argc, 
             case 'j':
                 cfg->json_template_file = optarg;
                 char *p = strrchr(optarg, '/');
-                sprintf(cfg->json_file, "%s/%s", JSON_FILE_DIR, p + 1);
+                if (p != NULL) {
+                    sprintf(cfg->json_file, "%s/%s", JSON_FILE_DIR, p + 1);
+                } else {
+                    sprintf(cfg->json_file, "%s/%s", JSON_FILE_DIR, optarg);
+                }
                 break;
             case 'H':
                 *header++ = optarg;
