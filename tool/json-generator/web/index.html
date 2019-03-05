@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sever manager</title>
+    <script src="./jquery-3.3.1.js"></script>
+    <script src="./bootstrap.min.js"></script>
+    <link rel="stylesheet" href="./bootstrap.css">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        .mdl {
+            background-color: silver;
+            padding: 7px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand">Navicore</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="container">
+            <div class="col-sm-12 col-md-12 main">
+                <div class="page-header">
+                    <h1 style="display: inline;">Wrk Json Convertor</h1>
+                </div>
+                <div class="page-body">
+                    <div class="row">
+                        <div class="col-sm-1 col-md-1">
+                            <button id="upload-package" class="btn btn-light" type="button">
+                                上传
+                                <input type="file" id="original-file-path" style="display:none" name="file" onchange="uploadFile()" />
+                            </button>
+                        </div>
+                        <div class="col-sm-11 col-md-11" id="convert-file">
+                            <div class="col-sm-6">
+                                <div class="input-group">
+                                    <div class="input-group-addon">源文件</div>
+                                    <div class="input-group-addon" id="file-name" md5=""></div>
+                                    <div class="input-group-addon">url路径</div>
+                                    <input autocomplete="off" type="text" class="form-control" id="url-path">
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class='dropdown'>
+                                    <button type='button' class='btn dropdown-toggle' data-toggle='dropdown'>转换 <span class='caret'></span></button>
+                                    <ul class='dropdown-menu' id='file-menu'>
+                                        <li><a id="convert-get">转GET</a></li>
+                                        <li><a id="convert-post-char">转POST(字符流<utf-8>)</a></li>
+                                        <li><a id="convert-post-bin">转POST(二进制流)</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <form method="get" id="download-json">
+                                    <button type='submit' class='btn btn-light'>下载</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <button type="button" class="btn btn-primary" data-toggle="collapse"data-target="#demo">使用方法</button>
+                <div id="demo" class="collapse" class="page-body">
+                    <div>
+                        <h5><strong>1. 整理原始URL文件</strong></h5>
+                        <ul>
+                            <li>如果请求URL为GET方法，将&lt;scheme&gt;://&lt;host&gt;:&lt;port&gt;删除，只保留URL剩余的内容，每行对应一个URL path；</li>
+                            <li>如果为POST方法，且数据流为字符流，将POST发送的body数据，每行一个body存储到文件中；</li>
+                            <li>如果为POST方法，且数据流为二进制流，将POST发送的body按照每个body写入一个文件，最后将所有文件打成一个包（rar、zip皆可）。</li>
+                        </ul>
+                        <img src="config.gif" alt="" class="img-thumbnail"/>
+                    </div>
+                    <div>
+                        <h5><strong>2. 将数据转为压力测试所用的JSON格式文件</strong></h5>
+                        <ul>
+                            <li>上传文件：点击上传按钮上传文件。</li>
+                            <li>转换文件：填写&lt;path&gt;，GET方法不必填写；选择正确的转换。</li>
+                            <li>下载文件：点击下载按钮，下载JSON文件。</li>
+                            <li>检查数据转换是否正确，如果不正确，自行修改文件后，重新执行步骤二；如果正确，将压测文件交由赵光强提交至压测平台</li>
+                        </ul>
+                        <img src="convert.gif" alt="" class="img-thumbnail"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <hr>
+            <footer>
+                <p class="text-center">&copy; Navicore 2018</p>
+            </footer>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // upload
+        $('#upload-package').click(function(){
+            document.getElementById("original-file-path").click()
+        })
+
+        function replaceElementHtml(element, content) {
+            $(element).html(content)
+        }
+
+        var g_hostname = window.location.hostname
+        var g_serverHost = window.location.protocol + "//" + g_hostname + "/wrk_json/api/v1"
+        $('#file-menu').find('a').click(clickMenu)
+
+        function clickMenu(e) {
+            var fileName = $("#file-name").text()
+            var md5 = $("#file-name").attr("md5")
+            console.log(md5)
+            if (fileName.length == 0) {
+                alert("请先上传文件!");
+                return
+            }
+            var convertType = $(this).attr('id')
+            var urlPath = $("#url-path").val()
+            console.log("convertType:" + convertType)
+            console.log("urlPath:" + urlPath)
+            request_url = g_serverHost + "/convert?md5=" + md5 + "&url_path=" + urlPath + "&convert_type=" + convertType
+            $.ajax({
+                url: request_url,
+                method: "GET",
+                timeout: 10000,
+                complete: function (e) {
+                    if (e.status == 200) {
+                        var response = e.responseJSON
+                        var msg = response['resultCode'] == 1 ? "转换成功" : "转换失败"
+                        alert(msg)
+                        $('#download-json').attr('action', window.location.href + "download/" + response['convertedFile']); 
+                    } else {
+                        alert("请求失败" + e.statusText)
+                    }
+                }
+            })
+        }
+
+        function uploadFile() {
+            console.log($("#original-file-path"))
+            console.log($("#original-file-path")[0].files[0].name)
+            var file = $("#original-file-path")[0].files[0]
+            var fileName = $("#original-file-path")[0].files[0].name
+            $("#original-file-path")[0].value=""
+            if(fileName == undefined) {
+                alert('未上传文件！');
+                return
+            }
+            $.ajax({
+                url: g_serverHost + "/upload/" + fileName,
+                method: "PUT",
+                contentType: 'application/x-www-form-urlencoded',
+                data: file,
+                cache: false,
+                timeout: 10000,
+                processData: false,
+                complete: function (e) {
+                    if (e.status == 200) {
+                        var response = e.responseJSON
+                        var msg = response['resultCode'] == 1 ? "上传成功" : "上传失败"
+                        alert(msg)
+                        replaceElementHtml('#file-name', fileName)
+                        $('#file-name').attr('md5', response['md5']); 
+                    } else {
+                        alert("请求失败" + e.statusText)
+                    }
+                }
+            })
+        }
+    </script>
+
+</body>
+
+</html>

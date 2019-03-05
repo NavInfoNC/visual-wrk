@@ -1,0 +1,2 @@
+{"startDistance": 0, "keyword": "atm/自助银行"}
+{"startDistance": 0, "keyword": "加油站"}
