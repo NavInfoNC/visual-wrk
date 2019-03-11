@@ -7,6 +7,7 @@
     <title>Sever manager</title>
     <script src="./jquery-3.3.1.js"></script>
     <script src="./bootstrap.min.js"></script>
+    <script src="./jquery.md5.js"></script> 
     <link rel="stylesheet" href="./bootstrap.css">
     <style type="text/css">
         body {
@@ -40,32 +41,41 @@
                 </div>
                 <div class="page-body">
                     <div class="row">
-                        <div class="col-sm-1 col-md-1">
-                            <button id="upload-package" class="btn btn-light" type="button">
-                                上传
-                                <input type="file" id="original-file-path" style="display:none" name="file" onchange="uploadFile()" />
-                            </button>
-                        </div>
                         <div class="col-sm-11 col-md-11" id="convert-file">
                             <div class="col-sm-6">
                                 <div class="input-group">
-                                    <div class="input-group-addon">源文件</div>
-                                    <div class="input-group-addon" id="file-name" md5=""></div>
-                                    <div class="input-group-addon">url路径</div>
-                                    <input autocomplete="off" type="text" class="form-control" id="url-path">
+                                    <div class="input-group-addon">
+                                        <button id="upload-urls-file" class="btn-light" type="button">
+                                            选择urls file
+                                            <input type="file" id="original-urls-file" style="display:none" onchange="selectFile(this)" />
+                                        </button>
+                                    </div>
+                                    <div class="input-group-addon" id="urls-file-name"></div>
+                                    <div class="input-group-addon">
+                                        <button id="upload-bodies-file" class="btn-light" type="button">
+                                            选择bodies file
+                                            <input type="file" id="original-bodies-file" style="display:none" onchange="selectFile(this)" />
+                                        </button>
+                                    </div>
+                                    <div class="input-group-addon" id="bodies-file-name"></div>
                                 </div>
                             </div>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2 col-md-2">
+                                <button id="upload-file" class="btn btn-light" type="button" onchange="uploadFile()">
+                                    上传
+                                </button>
+                            </div>
+                            <div class="col-sm-2">
                                 <div class='dropdown'>
                                     <button type='button' class='btn dropdown-toggle' data-toggle='dropdown'>转换 <span class='caret'></span></button>
-                                    <ul class='dropdown-menu' id='file-menu'>
+                                    <ul class='dropdown-menu' id='file-menu' md5='12' >
                                         <li><a id="convert-get">转GET</a></li>
                                         <li><a id="convert-post-char">转POST(字符流<utf-8>)</a></li>
                                         <li><a id="convert-post-bin">转POST(二进制流)</a></li>
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <form method="get" id="download-json">
                                     <button type='submit' class='btn btn-light'>下载</button>
                                 </form>
@@ -77,18 +87,20 @@
                 <button type="button" class="btn btn-primary" data-toggle="collapse"data-target="#demo">使用方法</button>
                 <div id="demo" class="collapse" class="page-body">
                     <div>
-                        <h5><strong>1. 整理原始URL文件</strong></h5>
+                        <h5><strong>1. 整理原始URL与body内容</strong></h5>
                         <ul>
-                            <li>如果请求URL为GET方法，将&lt;scheme&gt;://&lt;host&gt;:&lt;port&gt;删除，只保留URL剩余的内容，每行对应一个URL path；</li>
-                            <li>如果为POST方法，且数据流为字符流，将POST发送的body数据，每行一个body存储到文件中；</li>
-                            <li>如果为POST方法，且数据流为二进制流，将POST发送的body按照每个body写入一个文件，最后将所有文件打成一个包（rar、zip皆可）。</li>
+                            <li>整理URL文件：将&lt;scheme&gt;://&lt;host&gt;:&lt;port&gt;删除，只保留URL剩余的内容，每行对应一个URL path存储到一个文件中</li>
+                            <li>整理body文件(字符串数据)：需将POST发送的body数据，每行一个body存储到同一文件中；</li>
+                            <li>整理body文件(二进制数据)：需将POST发送的body按照每个body写入一个文件，最后将所有文件打成一个包（rar、zip皆可）。</li>
+                            <li>注：URL文件中如果只有一行，则URL与body的关系为一对多；否则URL数量需与body数量一致</li>
                         </ul>
                         <img src="config.gif" alt="" class="img-thumbnail"/>
                     </div>
                     <div>
                         <h5><strong>2. 将数据转为压力测试所用的JSON格式文件</strong></h5>
                         <ul>
-                            <li>上传文件：点击上传按钮上传文件。</li>
+                            <li>选择文件：点击按钮选择URL文件以及body文件。</li>
+                            <li>上传文件：点击按钮上传文件。</li>
                             <li>转换文件：填写&lt;path&gt;，GET方法不必填写；选择正确的转换。</li>
                             <li>下载文件：点击下载按钮，下载JSON文件。</li>
                             <li>检查数据转换是否正确，如果不正确，自行修改文件后，重新执行步骤二；如果正确，将压测文件交由赵光强提交至压测平台</li>
@@ -108,8 +120,12 @@
 
     <script type="text/javascript">
         // upload
-        $('#upload-package').click(function(){
-            document.getElementById("original-file-path").click()
+        $('#upload-urls-file').click(function(){
+            document.getElementById("original-urls-file").click()
+        })
+
+        $('#upload-bodies-file').click(function(){
+            document.getElementById("original-bodies-file").click()
         })
 
         function replaceElementHtml(element, content) {
@@ -121,18 +137,17 @@
         $('#file-menu').find('a').click(clickMenu)
 
         function clickMenu(e) {
-            var fileName = $("#file-name").text()
-            var md5 = $("#file-name").attr("md5")
-            console.log(md5)
-            if (fileName.length == 0) {
+            var urlsFileName = $("#urls-file-name").text()
+            var bodiesFileName = $("#bodies-file-name").text()
+            var convertType = $(this).attr('id')
+            if (urlsFileName.length == 0 || (bodiesFileName.length == 0 && convertType != "convert-get")) {
                 alert("请先上传文件!");
                 return
             }
-            var convertType = $(this).attr('id')
-            var urlPath = $("#url-path").val()
+
+            var md5 = $("#file-menu").attr("md5")
             console.log("convertType:" + convertType)
-            console.log("urlPath:" + urlPath)
-            request_url = g_serverHost + "/convert?md5=" + md5 + "&url_path=" + urlPath + "&convert_type=" + convertType
+            request_url = g_serverHost + "/convert?md5=" + md5 + "&convert_type=" + convertType
             $.ajax({
                 url: request_url,
                 method: "GET",
@@ -150,18 +165,57 @@
             })
         }
 
-        function uploadFile() {
-            console.log($("#original-file-path"))
-            console.log($("#original-file-path")[0].files[0].name)
-            var file = $("#original-file-path")[0].files[0]
-            var fileName = $("#original-file-path")[0].files[0].name
-            $("#original-file-path")[0].value=""
+        function selectFile(t) {
+            console.log($("#file-menu").attr("md5"))
+            fileName = $('#' + t.id)[0].files[0].name
+            if (t.id == "original-urls-file") {
+                replaceElementHtml("#urls-file-name", fileName)
+            } else if (t.id == "original-bodies-file"){
+                replaceElementHtml("#bodies-file-name", fileName)
+            }
+        }
+
+        $('#upload-file').click(function(){
+            var current_date = (new Date()).valueOf().toString();
+            var random = Math.random().toString();
+            md5 = $.md5(current_date + random)
+            request_url = g_serverHost + "/upload?md5=" + md5
+            $.ajax({
+                url: request_url,
+                method: "GET",
+                timeout: 10000,
+                complete: function (e) {
+                    if (e.status == 200) {
+                        var response = e.responseJSON
+                        if (response['resultCode'] == 1) {
+                            var urlsFile = $('#original-urls-file')[0].files[0]
+                            var bodiesFile = $('#original-bodies-file')[0].files[0]
+                            if (urlsFile != undefined) {
+                                uploadFile(md5, urlsFile, "urls.txt")
+                            }
+                            if (bodiesFile != undefined) {
+                                uploadFile(md5, bodiesFile, "bodies.txt")
+                            }
+                            $('#file-menu').attr('md5', md5); 
+                        } else {
+                            alert("md5上传失败")
+                        }
+                    } else {
+                        alert("请求失败" + e.statusText)
+                    }
+                }
+            })           
+        })
+
+        function uploadFile(md5, file, fileName) {
             if(fileName == undefined) {
                 alert('未上传文件！');
                 return
             }
+
+            filePath = md5 + "/" + fileName
             $.ajax({
-                url: g_serverHost + "/upload/" + fileName,
+                url: g_serverHost + "/upload/" + filePath,
                 method: "PUT",
                 contentType: 'application/x-www-form-urlencoded',
                 data: file,
@@ -172,9 +226,7 @@
                     if (e.status == 200) {
                         var response = e.responseJSON
                         var msg = response['resultCode'] == 1 ? "上传成功" : "上传失败"
-                        alert(msg)
-                        replaceElementHtml('#file-name', fileName)
-                        $('#file-name').attr('md5', response['md5']); 
+                        alert(file.name + msg)
                     } else {
                         alert("请求失败" + e.statusText)
                     }
