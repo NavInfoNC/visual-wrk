@@ -129,21 +129,21 @@ static char *get_template(const char *template_name) {
 
 static bool save_template(const char *dst_path, const char *buffer, int buffer_size) {
     FILE *fd = fopen(dst_path, "w");
-    if (fd == NULL) {          
+    if (fd == NULL) {
             fprintf(stderr, "fopen %s failed:get last error:%d\n", dst_path, errno);
-            return false;          
+            return false;
         }
 
-    bool result = true;        
-    int written_size = fwrite(buffer, sizeof(char), buffer_size, fd); 
-    if (written_size != buffer_size) { 
+    bool result = true;
+    int written_size = fwrite(buffer, sizeof(char), buffer_size, fd);
+    if (written_size != buffer_size) {
             fprintf(stderr, "fwrite %s failed:get last error:%d\n", dst_path, errno);
-            result = false;        
-        }                          
-    fclose(fd);                
+            result = false;
+        }
+    fclose(fd);
 
-    return result;             
-} 
+    return result;
+}
 
 static void decide_thread_num(struct config *cfg) {
     if (cfg->connections < 500)
@@ -426,7 +426,7 @@ int main(int argc, char **argv) {
     print_stats("Latency", statistics.latency, format_time_us);
     print_stats("Req/Sec", statistics.requests, format_metric);
     print_stats_latency(statistics.latency);
-    
+
     print_result_form();
 
     if (collectCfg.result) {
@@ -931,16 +931,16 @@ END:
     record_html_log("${error_codes}", buff);
 }
 
-uint64_t digit_ceil(uint64_t x) {  
-    int len=0;  
-    while(x) {  
-        x/=10;  
-        len++;  
+uint64_t digit_ceil(uint64_t x) {
+    int len=0;
+    while(x) {
+        x/=10;
+        len++;
         if (x < 10)
             break;
-    }  
+    }
     return (x + 1) * pow(10, len);
-}  
+}
 
 static void print_stats_latency_map(stats *stats) {
     uint64_t max = digit_ceil(stats->max);
@@ -1017,7 +1017,7 @@ static void print_stats_requests(stats *stats) {
         if (requests_num == cfg.interval) {
             time_t time = start_thread_time/1000/1000 + i;
             strftime(timeArray, sizeof(timeArray) - 1, "%F %T", localtime(&time));
-            aprintf(&rps_data, "\n{\"date\":\"%s\", \"requests\":%Lf, \"success\":%Lf},", 
+            aprintf(&rps_data, "\n{\"date\":\"%s\", \"requests\":%Lf, \"success\":%Lf},",
                     timeArray, (long double)requests/cfg.interval, (long double)success/cfg.interval);
             success = 0;
             requests = 0;
@@ -1051,7 +1051,7 @@ static void print_stats(char *name, stats *stats, char *(*fmt)(long double)) {
 }
 
 static void print_stats_latency(stats *stats) {
-    if (!cfg.latency) 
+    if (!cfg.latency)
         record_html_log("${latency_distribution}", "Latency Distribution\n");
 
     long double percentiles[] = { 50.0, 66.0, 75.0, 80.0, 90.0, 95.0, 98.0, 99.0, 100.0 };
@@ -1204,7 +1204,7 @@ static void print_io_percent(json_t *json, uint64_t start_time) {
         double write_size = i != 0 ? ioPerformance->write_size.array[i] - ioPerformance->write_size.array[i - 1] : 0;
         int read_count = i != 0 ? ioPerformance->read_count.array[i] - ioPerformance->read_count.array[i - 1] : 0;
         int write_count = i != 0 ? ioPerformance->write_count.array[i] - ioPerformance->write_count.array[i - 1] : 0;
-        aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},", 
+        aprintf(&performance_data, "\n{\"date\":\"%s\", \"readSize\":%lf, \"writeSize\":%lf, \"readCount\":%d, \"writeCount\":%d},",
                 timeArray, read_size, write_size, read_count, write_count);
     }
 
@@ -1236,7 +1236,7 @@ static void print_disk_info(json_t *json) {
     char* disk_info_data = NULL;
     for (int i = 0; i < disk_num; i++)
     {
-        aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mount_point, 
+        aprintf(&disk_info_data, "Usage of %s : %.1f%% of %.1f GB\n", disk_info[i]->mount_point,
                 disk_info[i]->percent, disk_info[i]->total);
     }
     record_html_log("${disk_info_data}", disk_info_data);

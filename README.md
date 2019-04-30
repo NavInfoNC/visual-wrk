@@ -11,14 +11,14 @@ sudo make install
 
 ## Basic Usage
 
-    wrk -t12 -c400 -d30s http://127.0.0.1:8080/index.html
+    virtual-wrk -c400 -d30s http://127.0.0.1:8080/index.html
 
   This runs a benchmark for 30 seconds, using 12 threads, and keeping
   400 HTTP connections open.
   Output a log.html in report/ directory.
 
     export WRK_URL=http://127.0.0.1:8080
-    wrk -t12 -c400 -d30s -j data.json --latency
+    virtual-wrk -c400 -d30s -j data.json --latency
 
   This runs a benchmark for data.json, print detailed latency statistics.
   Output a log.html in report/ directory.
@@ -33,8 +33,6 @@ sudo make install
     -i, --interval     request sampling interval
 
     -j, --json         load json data for script
-
-    -t, --threads:     total number of threads to use
 
     -s, --script:      LuaJIT script, see SCRIPTING. If not specified, the
                        default is to use the multi_requests.lua
