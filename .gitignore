@@ -6,3 +6,4 @@ log.html
 deps/LuaJIT-2.1.0-beta3/
 report/
 visual-wrk
+.vscode
