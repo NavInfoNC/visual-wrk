@@ -1,5 +1,5 @@
 **visual-wrk**是一款基于wrk开源项目二次开发的Linux下可视化压测软件。
-git地址（https://github.com/NavInfo2/visual-wrk.git）
+git地址（https://github.com/NavInfoNC/visual-wrk.git）
 
 朋友，如果你需要一款Linux下**安装简便、易于使用**的压测工具；或是需要**超高并发**却苦于没有服务器集群；或是需要将压力测试**集成至Jenkins**并得到一份**丰富的可视化报表**；又或是需要**随机、按比例混合**测试案例的压测工具，那么**visual-wrk**将是你的不二之选！！！
 
@@ -42,7 +42,7 @@ git地址（https://github.com/NavInfo2/visual-wrk.git）
 
 ## 3. 下载与安装
 ```
-git clone git@github.com:NavInfo2/visual-wrk.git
+git clone git@github.com:NavInfoNC/visual-wrk.git
 cd visual-wrk/
 make
 make install
