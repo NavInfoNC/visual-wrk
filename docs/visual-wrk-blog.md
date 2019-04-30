@@ -45,24 +45,24 @@ git地址（https://github.com/NavInfoNC/visual-wrk.git）
 git clone git@github.com:NavInfoNC/visual-wrk.git
 cd visual-wrk/
 make
-make install
+sudo make install
 ```
 
 ## 4. 命令行参数
 ```
-Usage: wrk <options> <url>                            
-  Options:                                            
+Usage: wrk <options> <url>
+  Options:
     -c, --connections <N>  Connections to keep open //并发个数
     -d, --duration    <T>  Duration of test         //测试时长
     -i, --interval    <T>  Request sampling interval//RPS的采样间隔
     -t, --threads     <N>  Number of threads to use //开启线程数，默认每增加500个并发，增加1个线程，直到线程数与机器核数一致
-                                                      
+
     -s, --script      <S>  Load Lua script file     //指定lua脚本，当软件不满足用户使用条件，用户可以自定义lua脚本做些特殊处理（默认不使用）
     -j, --json        <S>  Load json data for script//包含http(PATH,METHOD,BODY等类型)的json数据，由lua脚本加载处理后提供给visual-wrk压测主程序使用
     -H, --header      <H>  Add header to request    //为request url增加特殊的header
         --latency          Print latency statistics //统计事物时延
     -v, --version          Print version details    //打印软件版本
-                                                      
+
   Numeric arguments may include a SI unit (1k, 1M, 1G)
   Time arguments may include a time unit (2s, 2m, 2h)
 ```
@@ -87,17 +87,17 @@ Usage: wrk <options> <url>
 * **单文件随机压测**的文件格式
 	```
 	{
-	    "request":                 
-	    [
-	        {
-	            "path": "url path",
-	            "method": "GET or POST"
+		"request":
+		[
+			{
+				"path": "url path",
+				"method": "GET or POST"
 				"bodyType": "base64"
 				"body": "body content"
-	        }                
-	    ]
-	} 
-	
+			}
+		]
+	}
+
 	path字段：填充url的path
 	method字段：填充POST或GET，其他方法暂未支持
 	body字段：method字段填充POST时，该字段为POST的内容；当填充GET时，不需要该字段
@@ -107,19 +107,19 @@ Usage: wrk <options> <url>
 
 	```
 	{
-            "mixed_test":              
-	    [
-	        {
-	            "label":"get",     
-	            "file": "data/method_get.json", 
-	            "weight": "1"      
-	        }
-	     ]
+		"mixed_test":
+		[
+			{
+				"label":"get",
+				"file": "data/method_get.json",
+				"weight": "1"
+			}
+		]
 	}
 	label字段：自定义唯一标签名
 	file字段：测试文件路径（以data的上一级目录为基准）
 	weight字段：每个文件的测试权重比
-	
+
 	当json文件为混合压测文件时，请以“mixed_”开头重命名文件
 	```
 
