@@ -21,7 +21,7 @@ cp Jenkinsfile template/ ~/load-test/
 1. [安装步骤](https://github.com/NavInfoNC/system-monitor/blob/master/README.rst)
 
 #### 创建压力测试文件
-1. 创建压力测试文件![步骤](https://github.com/NavInfoNC/visual-wrk/blob/master/docs/visual-wrk-blog.md#5-%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95)
+1. 创建压力测试文件[步骤](https://github.com/NavInfoNC/visual-wrk/blob/master/docs/visual-wrk-blog.md#5-%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95)
 2. 将压测文件PUSH至load-test仓库的data目录下
 
 #### 通过Jenkins进行压力测试
