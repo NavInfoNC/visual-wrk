@@ -1,9 +1,9 @@
-# 基于visual-wrk压测的Jenkins CI解决方案
+# 基于visual-wrk的Jenkins CI压测解决方案
 
 ## 压测平台及被测平台的软件部署步骤
 
 #### visual-wrk的下载与安装(压测平台)
-1. [安装步骤参见](https://github.com/NavInfoNC/visual-wrk/blob/master/docs/visual-wrk-blog.md#3-%E4%B8%8B%E8%BD%BD%E4%B8%8E%E5%AE%89%E8%A3%85)
+1. [安装步骤](https://github.com/NavInfoNC/visual-wrk/blob/master/docs/visual-wrk-blog.md#3-%E4%B8%8B%E8%BD%BD%E4%B8%8E%E5%AE%89%E8%A3%85)
 
 #### visual-wrk与Jenkins集成(压测平台)
 1. 构建load-test目录
@@ -28,7 +28,5 @@ cp Jenkinsfile template/ ~/load-test/
 1. 在Jenkins上配置load-test参数并执行build即可开始一次压力测试
 
 ## 如需了解更多
-
-[visual-wrk](https://github.com/NavInfoNC/visual-wrk)
-
-[system-monitor](https://github.com/NavInfoNC/system-monitor)
+1. [visual-wrk](https://github.com/NavInfoNC/visual-wrk)
+2. [system-monitor](https://github.com/NavInfoNC/system-monitor)
