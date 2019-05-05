@@ -4,10 +4,10 @@ Another HTTP load tester. Features HTML based report(including charts), dynamic 
 
 ## Install
 
-git clone git@github.com:NavInfoNC/visual-wrk.git
-cd visual-wrk/
-make
-sudo make install
+    git clone git@github.com:NavInfoNC/visual-wrk.git
+    cd visual-wrk/
+    make
+    sudo make install
 
 ## Basic Usage
 
