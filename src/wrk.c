@@ -22,6 +22,8 @@
 
 #define MAX_URL_LENGTH 2048
 #define JSON_FILE_DIR "report"
+#define STR_EXPAND(name) #name
+#define STR(macro) STR_EXPAND(macro)
 
 static uint64_t start_thread_time = 0;
 static bool thread_concurrency;
@@ -256,7 +258,10 @@ static bool prepare_template() {
         return false;
     }
 
-    system("cp /usr/local/lib/visual_wrk/template/* report -rf");
+	char *cmd = NULL;
+	aprintf(&cmd, "cp %s/lib/visual_wrk/template/* report -rf", STR(INSTALL_PREFIX));
+    system(cmd);
+	free(cmd);
 
     g_html_template = get_template("report/template.html");
     if (g_html_template == NULL) {
@@ -458,6 +463,7 @@ int main(int argc, char **argv) {
     ret = 0;
 
 END:
+	free(cfg.script);
     free(url);
     zfree(headers);
     free(g_html_template);
@@ -823,7 +829,7 @@ static int parse_args(struct config *cfg, char **url, char **headers, int argc, 
     if (!cfg->threads || !cfg->duration) return -1;
 
     if (cfg->script == NULL && cfg->json_template_file != NULL)
-        cfg->script = "/usr/local/lib/visual_wrk/multi_requests.lua";
+		aprintf(&cfg->script, "%s/lib/visual_wrk/multi_requests.lua", STR(INSTALL_PREFIX));
 
     if (!cfg->connections || cfg->connections < cfg->threads) {
         fprintf(stderr, "number of connections must be >= threads\n");

@@ -1,4 +1,4 @@
-CFLAGS  += -std=c99 -Wall -g -D_REENTRANT
+CFLAGS  += -std=c99 -Wall -g -D_REENTRANT  -DINSTALL_PREFIX=${INSTALL_PREFIX}
 LIBS    := -lpthread -lm -lssl -lcrypto
 
 TARGET  := $(shell uname -s | tr '[A-Z]' '[a-z]' 2>/dev/null || echo unknown)
@@ -65,6 +65,8 @@ endif
 
 ifeq ($(PREFIX),)
 	INSTALL_PREFIX = /usr/local
+else
+	INSTALL_PREFIX = $(PREFIX)
 endif
 
 all: $(BIN)

@@ -19,6 +19,8 @@ Dependencies
 
     WITH_LUAJIT
     WITH_OPENSSL
+    WITH_JANSSON
+	WITH_CURL
 
   For example to use the system version of both libraries on Linux:
 
