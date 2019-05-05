@@ -77,6 +77,8 @@ install: ${BIN}
 	install -m 755 ${BIN} ${INSTALL_PREFIX}/bin/
 	install -d ${INSTALL_PREFIX}/lib/visual_wrk/
 	install -m 755 lib/* ${INSTALL_PREFIX}/lib/visual_wrk/
+	cp template/ ${INSTALL_PREFIX}/lib/visual_wrk/ -R
+	chmod 755 ${INSTALL_PREFIX}/lib/visual_wrk/template -R
 
 uninstall:
 	rm ${INSTALL_PREFIX}/bin/${BIN} ${INSTALL_PREFIX}/lib/visual_wrk/ -rf

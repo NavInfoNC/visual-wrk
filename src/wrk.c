@@ -91,7 +91,6 @@ static void usage() {
            "    -c, --connections <N>  Connections to keep open   \n"
            "    -d, --duration    <T>  Duration of test           \n"
            "    -i, --interval    <T>  Request sampling interval  \n"
-           "    -t, --threads     <N>  Number of threads to use   \n"
            "                                                      \n"
            "    -s, --script      <S>  Load Lua script file       \n"
            "    -j, --json        <S>  Load json data for script  \n"
@@ -129,18 +128,18 @@ static char *get_template(const char *template_name) {
 
 static bool save_template(const char *dst_path, const char *buffer, int buffer_size) {
     FILE *fd = fopen(dst_path, "w");
-    if (fd == NULL) {
-            fprintf(stderr, "fopen %s failed:get last error:%d\n", dst_path, errno);
-            return false;
-        }
+    if (fd == NULL) {          
+        fprintf(stderr, "fopen %s failed:get last error:%d\n", dst_path, errno);
+        return false;          
+    }
 
-    bool result = true;
-    int written_size = fwrite(buffer, sizeof(char), buffer_size, fd);
-    if (written_size != buffer_size) {
-            fprintf(stderr, "fwrite %s failed:get last error:%d\n", dst_path, errno);
-            result = false;
-        }
-    fclose(fd);
+    bool result = true;        
+    int written_size = fwrite(buffer, sizeof(char), buffer_size, fd); 
+    if (written_size != buffer_size) { 
+        fprintf(stderr, "fwrite %s failed:get last error:%d\n", dst_path, errno);
+        result = false;        
+    }                          
+    fclose(fd);                
 
     return result;
 }
@@ -210,16 +209,16 @@ static bool build_mixed_file(char **file_list_link) {
             goto END;
         }
 
-		const char *p = strrchr(file_path, '/');
-		if (p == NULL || p + 1 == 0)
-			p = file_path;
-		else
-			p++;
+        const char *p = strrchr(file_path, '/');
+        if (p == NULL || p + 1 == 0)
+            p = file_path;
+        else
+            p++;
 
-		char dst_file[256];
-		sprintf(dst_file, "%s/%s", JSON_FILE_DIR, p);
-		aprintf(file_list_link, "<div><a href=\"%s\">%s</a></div>", p, p);
-		json_object_set(test_json, "file", json_string(dst_file));
+        char dst_file[256];
+        sprintf(dst_file, "%s/%s", JSON_FILE_DIR, p);
+        aprintf(file_list_link, "<div><a href=\"%s\">%s</a></div>", p, p);
+        json_object_set(test_json, "file", json_string(dst_file));
     }
 
     if (json_dump_file(template_json, cfg.json_file, JSON_INDENT(4)) == 0)
@@ -251,24 +250,30 @@ static bool build_test_data(const char *url) {
     return result;
 }
 
-int main(int argc, char **argv) {
-    thread_concurrency = false;
-    char *url = NULL;
-    char **headers = zmalloc(argc * sizeof(char *));
-    struct http_parser_url parts = {};
-	int ret = 1;
+static bool prepare_template() {
+    if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0) {
+        fprintf(stderr, "mkdir report failed");
+        return false;
+    }
 
-    if (access("report", F_OK) != 0 && mkdir("report", 0775) != 0)
-        goto END;
-
-    system("cp template/* report -rf");
+    system("cp /usr/local/lib/visual_wrk/template/* report -rf");
 
     g_html_template = get_template("report/template.html");
     if (g_html_template == NULL) {
         fprintf(stderr, "Cannot open HTML template");
         free(g_html_template);
-        goto END;
+        return false;
     }
+
+    return true;
+}
+
+int main(int argc, char **argv) {
+    thread_concurrency = false;
+    char *url = NULL;
+    char **headers = zmalloc(argc * sizeof(char *));
+    struct http_parser_url parts = {};
+    int ret = 1;
 
     if (parse_args(&cfg, &url, headers, argc, argv)) {
         usage();
@@ -283,6 +288,9 @@ int main(int argc, char **argv) {
         }
         aprintf(&url, "%s", wrk_url);
     }
+
+    if (!prepare_template())
+        goto END;
 
     if (cfg.json_template_file != NULL) {
         if (!build_test_data(url))
@@ -447,10 +455,10 @@ int main(int argc, char **argv) {
 
     clear_unused_variable();
     save_template("report/log.html", g_html_template, strlen(g_html_template));
-	ret = 0;
+    ret = 0;
 
 END:
-	free(url);
+    free(url);
     zfree(headers);
     free(g_html_template);
 
@@ -543,7 +551,7 @@ static int record_rate(aeEventLoop *loop, long long id, void *data) {
     }
 
     if (thread->requests > 0) {
-		stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
+        stats_record_requests_per_sec(statistics.requests, true, thread->requests, time_interval);
         thread->requests = 0;
         thread->start    = time_us();
     }
