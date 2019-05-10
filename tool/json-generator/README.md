@@ -44,3 +44,14 @@ python3 jsonGenerator.py -t GET -b test/get.txt  -u test/url.txt -o a.json
 python3 jsonGenerator.py -t POST_bin -b test/post_bin.rar  -u test/url.txt -o a.json
 ```
 
+## 整理原始URL与body内容
+
+整理原始URL提供给-u参数使用，整理body内容提供给-b参数使用
+
+1. 整理URL文件：将<scheme>://<host>:<port>删除，只保留URL剩余的内容，每行对应一个URL path存储到一个文件中
+2. 整理body文件
+```
+    字符串数据：需将POST发送的body数据，每行一个body存储到同一文件中；
+    二进制数据：需将POST发送的body按照每个body写入一个文件，最后将所有文件打成一个包（rar、zip皆可）。
+```
+注：URL文件中如果只有一行，则URL与body的关系为一对多；否则URL数量需与body数量一致
