@@ -11,14 +11,14 @@ Another HTTP load tester. Features HTML based report(including charts), dynamic 
 
 ## Basic Usage
 
-    vistual-wrk -c400 -d30s http://127.0.0.1:8080/index.html
+    visual-wrk -c400 -d30s http://127.0.0.1:8080/index.html
 
   This runs a benchmark for 30 seconds, using 12 threads, and keeping
   400 HTTP connections open.
   Output a log.html in report/ directory.
 
     export WRK_URL=http://127.0.0.1:8080
-    vistual-wrk -c400 -d30s -j data.json --latency
+    visual-wrk -c400 -d30s -j data.json --latency
 
   This runs a benchmark for data.json, print detailed latency statistics.
   Output a log.html in report/ directory.
