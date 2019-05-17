@@ -99,14 +99,14 @@ bool start_collecting(const char *host, int duration, int interval, char *server
 		strcat(url, "&server=");
 		strcat(url, server_name);
 	}
-	fprintf(stderr, "server performance start collecting url:%s\n", url);
+	fprintf(stderr, "server performance start collecting");
 
 	struct string buffer;
 	init_string(&buffer);
 	int response_code = http_request(url, &buffer);
 	if (response_code != 200) {
 		free(buffer.ptr);
-		fprintf(stderr, "server performance start collecting response_code:%d\n", response_code);
+		fprintf(stderr, "server performance start collecting response_code: %d, url: %s\n", response_code, url);
 		return false;
 	}
 
@@ -127,14 +127,14 @@ json_t *stop_collecting(const char *host, char *hash)
 	char url[256];
 
 	sprintf(url, "http://%s/%s/%s?hash=%s", host, URL_PREFFIX, PERFORMANCE_STOP_COLLECTING, hash);
-	fprintf(stderr, "server performance stop collecting url:%s\n", url);
+	fprintf(stderr, "server performance stop collecting");
 
 	struct string buffer;
 	init_string(&buffer);
 	int response_code = http_request(url, &buffer);
 	if (response_code != 200 || buffer.len == 0) {
 		free(buffer.ptr);
-		fprintf(stderr, "server performance stop collecting response_code:%d\n", response_code);
+		fprintf(stderr, "server performance stop collecting response_code: %d, url: %s\n", response_code, url);
 		return NULL;
 	}
 
