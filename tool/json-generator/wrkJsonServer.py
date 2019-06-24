@@ -95,7 +95,7 @@ def webapp(environ, start_response):
                     if src_file_name == None:
                         dst_file_name = "result.json"
                     else:
-                        dst_file_name = src_file_name[0].split(".")[0] + ".json"
+                        dst_file_name = os.path.splitext(src_file_name[0])[0] + ".json"
                     dst_path = g_data_dir + md5_string[0] + "/" + dst_file_name
                     json_fp = open(dst_path, "w")
                     try:
@@ -137,10 +137,10 @@ def remove_dir(top):
         print("dirs:%s, files:%s, root:%s" %(dirs, files, root))
         for name in files:
             os.remove(os.path.join(root, name))
-            print(route+name)
+            print(root+name)
         for name in dirs:
             os.rmdir(os.path.join(root, name))
-            print(route+name)
+            print(root+name)
     os.rmdir(root)
 
 log_handler = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes = 1024*1024, backupCount = 5) 
