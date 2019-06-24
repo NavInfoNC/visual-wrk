@@ -165,8 +165,9 @@ void script_request(lua_State *L, char **buf, size_t *len) {
     }
     lua_call(L, 0, 1);
     const char *str = lua_tolstring(L, -1, len);
-    *buf = realloc(*buf, *len);
+    *buf = realloc(*buf, *len + 1);
     memcpy(*buf, str, *len);
+    (*buf)[*len] = 0;
     lua_pop(L, pop);
 }
 
