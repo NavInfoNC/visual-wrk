@@ -147,7 +147,7 @@
 
             var md5 = $("#file-menu").attr("md5")
             console.log("convertType:" + convertType)
-            request_url = g_serverHost + "/convert?md5=" + md5 + "&convert_type=" + convertType
+            request_url = g_serverHost + "/convert?md5=" + md5 + "&convert_type=" + convertType + "&file_name=" + urlsFileName
             $.ajax({
                 url: request_url,
                 method: "GET",

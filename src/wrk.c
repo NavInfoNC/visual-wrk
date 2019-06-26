@@ -22,11 +22,13 @@
 
 #define MAX_URL_LENGTH 2048
 #define JSON_FILE_DIR "report"
+#define HTTP_ERROR_LOG "report/http_error.log"
 #define STR_EXPAND(name) #name
 #define STR(macro) STR_EXPAND(macro)
 
 static uint64_t start_thread_time = 0;
 static bool thread_concurrency;
+int g_http_log_handle = -1;
 
 static struct config {
     uint64_t connections;
@@ -247,7 +249,8 @@ static bool build_test_data(const char *url) {
     else
         result = build_test_file(cfg.json_template_file);
 
-    print_test_parameter(url, file_list_link);
+    record_html_log("${file_list_link}", file_list_link);
+
     free(file_list_link);
     return result;
 }
@@ -302,6 +305,7 @@ int main(int argc, char **argv) {
             goto END;
     }
 
+    print_test_parameter(url);
     decide_thread_num(&cfg);
 
     lua_State *L = script_create(cfg.script, cfg.json_file, url, headers);
@@ -321,6 +325,8 @@ int main(int argc, char **argv) {
     }
 
     cfg.host = host;
+
+    g_http_log_handle = open(HTTP_ERROR_LOG, O_WRONLY|O_CREAT, 0644);
 
     CollectConfig collectCfg;
     collectCfg.result  = start_collecting(cfg.host, cfg.duration, cfg.interval, NULL, collectCfg.hash_string);
@@ -463,6 +469,10 @@ int main(int argc, char **argv) {
     ret = 0;
 
 END:
+    if (g_http_log_handle != -1)
+        close(g_http_log_handle);
+
+    zfree(schema);
 	free(cfg.script);
     free(url);
     zfree(headers);
@@ -501,6 +511,16 @@ void *thread_main(void *arg) {
             aeMain(loop);
         }else
             usleep(100);
+    }
+
+    if (cfg.dynamic) {
+        c = thread->cs;
+        for (uint64_t i = 0; i < thread->connections; i++, c++) {
+            if (c->request != NULL) {
+                free(c->request);
+                c->request = NULL;
+            }
+        }
     }
 
     aeDeleteEventLoop(loop);
@@ -613,6 +633,9 @@ static int response_complete(http_parser *parser) {
     thread->requests++;
 
     if (status > 399) {
+        flock(g_http_log_handle, LOCK_EX);
+        dprintf(g_http_log_handle, "Error Code:%d\r\nRequest Header:\r\n%s\r\n-------\r\n", status, c->request);
+        flock(g_http_log_handle, LOCK_UN);
         thread->errors.code[status] += 1;
         thread->errors.status++;
     }else {
@@ -679,6 +702,8 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
 
     if (!c->written) {
         if (cfg.dynamic) {
+            if (c->request != NULL)
+                free(c->request);
             script_request(thread->L, &c->request, &c->length);
         }
         c->start   = time_us();
@@ -690,11 +715,6 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     size_t n;
 
     status r = sock.write(c, buf, len, &n);
-    if (cfg.dynamic) {
-        free(c->request);
-        c->request = NULL;
-    }
-
     switch (r) {
         case OK:    break;
         case ERROR: goto error;
@@ -710,6 +730,10 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     return;
 
   error:
+    if (cfg.dynamic) {
+        free(c->request);
+        c->request = NULL;
+    }
     thread->errors.write++;
     reconnect_socket(thread, c);
 }
@@ -731,11 +755,17 @@ static void socket_readable(aeEventLoop *loop, int fd, void *data, int mask) {
         c->thread->bytes += n;
     } while (n == RECVBUF && sock.readable(c) > 0);
 
-    return;
+    goto end;
 
   error:
     c->thread->errors.read++;
     reconnect_socket(c->thread, c);
+
+  end:
+    if (cfg.dynamic) {
+        free(c->request);
+        c->request = NULL;
+    }
 }
 
 static uint64_t time_us() {
@@ -941,6 +971,9 @@ static void print_stats_error_code(errors *errors) {
         }
     }
 
+    offset = strlen(buff);
+    snprintf(buff + offset, sizeof(buff), "Error log:\n  <a href=\"http_error.log\">http_error.log</a>");
+
 END:
     record_html_log("${error_codes}", buff);
 }
@@ -1102,9 +1135,7 @@ static void print_result_form() {
     record_html_log("${rps_PorNstdev}", o->rps_PorNstdev);
 }
 
-static void print_test_parameter(const char *url, char *file_list_link) {
-    record_html_log("${file_list_link}", file_list_link);
-
+static void print_test_parameter(const char *url) {
     char buff[1024];
     char *time = format_time_s(cfg.duration);
     format_time_str(&time);
