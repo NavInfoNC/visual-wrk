@@ -222,7 +222,7 @@
             })           
         })
 
-        var uploadFlickerNum = 0;
+        var g_uploadFlickerRefCount = 0;
 
         function uploadFile(md5, file, fileName) {
             if(fileName == undefined) {
@@ -233,13 +233,13 @@
             filePath = md5 + "/" + fileName
 
             var uploadFlicker;
-            if (uploadFlickerNum == 0) {
+            if (g_uploadFlickerRefCount == 0) {
                 uploadFlicker = setInterval(function(){
                     $("#upload-file").fadeOut(500).fadeIn(500);
                 },1000);
                 replaceElementHtml("#upload-file", "上传中...")
             }
-            uploadFlickerNum++;
+            g_uploadFlickerRefCount++;
 
             $.ajax({
                 url: g_serverHost + "/upload/" + filePath,
@@ -254,7 +254,7 @@
                         clearInterval(uploadFlicker);
                         replaceElementHtml("#upload-file", "上传")
                     }
-                    uploadFlickerNum--;
+                    g_uploadFlickerRefCount--;
 
                     if (e.status == 200) {
                         var response = e.responseJSON
