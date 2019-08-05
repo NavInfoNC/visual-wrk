@@ -42,7 +42,7 @@
                 <div class="page-body">
                     <div class="row">
                         <div class="col-sm-11 col-md-11" id="convert-file">
-                            <div class="col-sm-6">
+                            <div class="col-sm-8 col-md-8">
                                 <div class="input-group">
                                     <div class="input-group-addon">
                                         <button id="upload-urls-file" class="btn-light" type="button">
@@ -60,14 +60,14 @@
                                     <div class="input-group-addon" id="bodies-file-name"></div>
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-1 col-md-1">
                                 <button id="upload-file" class="btn btn-light" type="button" onchange="uploadFile()">
                                     上传
                                 </button>
                             </div>
-                            <div class="col-sm-2">
+                            <div class="col-sm-1 col-md-1">
                                 <div class='dropdown'>
-                                    <button type='button' class='btn dropdown-toggle' data-toggle='dropdown'>转换 <span class='caret'></span></button>
+                                    <button id="convert-type" type='button' class='btn dropdown-toggle' data-toggle='dropdown'>转换 <span class='caret'></span></button>
                                     <ul class='dropdown-menu' id='file-menu' md5='12' >
                                         <li><a id="convert-get">转GET</a></li>
                                         <li><a id="convert-post-char">转POST(字符流<utf-8>)</a></li>
@@ -75,7 +75,7 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-sm-2">
+                            <div class="col-sm-2 col-md-2">
                                 <form method="get" id="download-json">
                                     <button type='submit' class='btn btn-light'>下载</button>
                                 </form>
@@ -119,6 +119,9 @@
     </div>
 
     <script type="text/javascript">
+        $("#original-urls-file").val("");
+        $("#original-bodies-file").val("");
+
         // upload
         $('#upload-urls-file').click(function(){
             document.getElementById("original-urls-file").click()
@@ -148,11 +151,17 @@
             var md5 = $("#file-menu").attr("md5")
             console.log("convertType:" + convertType)
             request_url = g_serverHost + "/convert?md5=" + md5 + "&convert_type=" + convertType + "&file_name=" + urlsFileName
+            var convertFlicker = setInterval(function(){
+                $("#convert-type").fadeOut(500).fadeIn(500);
+            },1000);
+            $("#convert-type").html("转换中...")
             $.ajax({
                 url: request_url,
                 method: "GET",
                 timeout: 10000,
                 complete: function (e) {
+                    clearInterval(convertFlicker)
+                    $("#convert-type").html("转换")
                     if (e.status == 200) {
                         var response = e.responseJSON
                         var msg = response['resultCode'] == 1 ? "转换成功" : "转换失败"
@@ -176,6 +185,13 @@
         }
 
         $('#upload-file').click(function(){
+            var urlsFile = $('#original-urls-file')[0].files[0]
+            if (urlsFile == undefined)
+            {
+                alert("请先选择文件...");
+                return;
+            }
+
             var current_date = (new Date()).valueOf().toString();
             var random = Math.random().toString();
             md5 = $.md5(current_date + random)
@@ -183,12 +199,11 @@
             $.ajax({
                 url: request_url,
                 method: "GET",
-                timeout: 10000,
+                timeout: 600000,
                 complete: function (e) {
                     if (e.status == 200) {
                         var response = e.responseJSON
                         if (response['resultCode'] == 1) {
-                            var urlsFile = $('#original-urls-file')[0].files[0]
                             var bodiesFile = $('#original-bodies-file')[0].files[0]
                             if (urlsFile != undefined) {
                                 uploadFile(md5, urlsFile, "urls.txt")
@@ -207,22 +222,40 @@
             })           
         })
 
+        var g_uploadFlickerRefCount = 0;
+
         function uploadFile(md5, file, fileName) {
             if(fileName == undefined) {
                 alert('未上传文件！');
-                return
+                return;
             }
 
             filePath = md5 + "/" + fileName
+
+            var uploadFlicker;
+            if (g_uploadFlickerRefCount == 0) {
+                uploadFlicker = setInterval(function(){
+                    $("#upload-file").fadeOut(500).fadeIn(500);
+                },1000);
+                replaceElementHtml("#upload-file", "上传中...")
+            }
+            g_uploadFlickerRefCount++;
+
             $.ajax({
                 url: g_serverHost + "/upload/" + filePath,
                 method: "PUT",
                 contentType: 'application/x-www-form-urlencoded',
                 data: file,
                 cache: false,
-                timeout: 10000,
+                timeout: 600000,
                 processData: false,
                 complete: function (e) {
+                    if (uploadFlicker != undefined) {
+                        clearInterval(uploadFlicker);
+                        replaceElementHtml("#upload-file", "上传")
+                    }
+                    g_uploadFlickerRefCount--;
+
                     if (e.status == 200) {
                         var response = e.responseJSON
                         var msg = response['resultCode'] == 1 ? "上传成功" : "上传失败"
