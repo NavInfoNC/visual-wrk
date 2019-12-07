@@ -449,6 +449,8 @@ int main(int argc, char **argv) {
     print_result_form();
 
     if (collectCfg.result) {
+        //wait 1 second for performance collector
+        sleep(1);
         json_t* responseJson = stop_collecting(cfg.host, collectCfg.hash_string);
         if (responseJson != NULL)
             print_dstServerPerformance(&collectCfg, responseJson);

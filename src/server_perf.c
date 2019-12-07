@@ -95,11 +95,12 @@ bool start_collecting(const char *host, int duration, int interval, char *server
 
 	char url[1024];
 	sprintf(url, "http://%s/%s/%s?hash=%s&duration=%d&interval=%d", host, URL_PREFFIX, PERFORMANCE_START_COLLECTING, hash, duration, interval);
+	fprintf(stderr, "start: %s\n", url);
 	if (server_name != NULL) {
 		strcat(url, "&server=");
 		strcat(url, server_name);
 	}
-	fprintf(stderr, "server performance start collecting");
+	fprintf(stderr, "server performance start collecting\n");
 
 	struct string buffer;
 	init_string(&buffer);
@@ -127,7 +128,8 @@ json_t *stop_collecting(const char *host, char *hash)
 	char url[256];
 
 	sprintf(url, "http://%s/%s/%s?hash=%s", host, URL_PREFFIX, PERFORMANCE_STOP_COLLECTING, hash);
-	fprintf(stderr, "server performance stop collecting");
+	fprintf(stderr, "server performance stop collecting\n");
+	fprintf(stderr, "stop: %s\n", url);
 
 	struct string buffer;
 	init_string(&buffer);
@@ -143,7 +145,7 @@ json_t *stop_collecting(const char *host, char *hash)
 	free(buffer.ptr);
 
 	const char *response_result = json_string_value(json_object_get(response_json, "result"));
-	if (strcmp("succeeded", response_result) != 0)
+	if (response_result == NULL || strcmp("succeeded", response_result) != 0)
 		return NULL;
 
 	return response_json;
