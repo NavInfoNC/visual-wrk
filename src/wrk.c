@@ -283,6 +283,11 @@ int main(int argc, char **argv) {
     struct http_parser_url parts = {};
     int ret = 1;
 
+    char *schema = NULL;
+    char *host = NULL;
+    char *port = NULL;
+    char *service = NULL;
+
     if (parse_args(&cfg, &url, headers, argc, argv)) {
         usage();
         goto END;
@@ -313,10 +318,10 @@ int main(int argc, char **argv) {
         fprintf(stderr, "invalid URL: %s\n", url);
         goto END;
     }
-    char *schema  = copy_url_part(url, &parts, UF_SCHEMA);
-    char *host    = copy_url_part(url, &parts, UF_HOST);
-    char *port    = copy_url_part(url, &parts, UF_PORT);
-    char *service = port ? port : schema;
+    schema  = copy_url_part(url, &parts, UF_SCHEMA);
+    host    = copy_url_part(url, &parts, UF_HOST);
+    port    = copy_url_part(url, &parts, UF_PORT);
+    service = port ? port : schema;
 
     if (!script_resolve(L, host, service)) {
         char *msg = strerror(errno);
